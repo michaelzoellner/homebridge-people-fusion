@@ -16,7 +16,7 @@ module.exports = function(homebridge) {
     HomebridgeAPI = homebridge;
     FakeGatoHistoryService = require('fakegato-history')(homebridge);
 
-    homebridge.registerPlatform("homebridge-people", "People", PeoplePlatform);
+    homebridge.registerPlatform("homebridge-people", "PeopleX", PeoplePlatform);
     homebridge.registerAccessory("homebridge-people", "PeopleAccessory", PeopleAccessory);
     homebridge.registerAccessory("homebridge-people", "PeopleAllAccessory", PeopleAllAccessory);
 }
@@ -77,48 +77,48 @@ PeoplePlatform.prototype = {
             var theUrlParams = theUrlParts.query;
             var body = [];
             request.on('error', (function(err) {
-              this.log("WebHook error: %s.", err);
-            }).bind(this)).on('data', function(chunk) {
-              body.push(chunk);
-            }).on('end', (function() {
-              body = Buffer.concat(body).toString();
-
-              response.on('error', function(err) {
                 this.log("WebHook error: %s.", err);
-              });
+            }).bind(this)).on('data', function(chunk) {
+                body.push(chunk);
+            }).on('end', (function() {
+                body = Buffer.concat(body).toString();
 
-              response.statusCode = 200;
-              response.setHeader('Content-Type', 'application/json');
+                response.on('error', function(err) {
+                    this.log("WebHook error: %s.", err);
+                });
 
-              if(!theUrlParams.sensor || !theUrlParams.state) {
-                response.statusCode = 404;
-                response.setHeader("Content-Type", "text/plain");
-                var errorText = "WebHook error: No sensor or state specified in request.";
-                this.log(errorText);
-                response.write(errorText);
-                response.end();
-              }
-              else {
-                var sensor = theUrlParams.sensor.toLowerCase();
-                var newState = (theUrlParams.state == "true");
-                this.log('Received hook for ' + sensor + ' -> ' + newState);
-                var responseBody = {
-                  success: true
-                };
-                for(var i = 0; i < this.peopleAccessories.length; i++){
-                  var peopleAccessory = this.peopleAccessories[i];
-                  var target = peopleAccessory.target
-                  if(peopleAccessory.name.toLowerCase() === sensor) {
-                    this.clearWebhookQueueForTarget(target);
-                    this.webhookQueue.push({"target": target, "newState": newState, "timeoutvar": setTimeout((function(){
-                        this.runWebhookFromQueueForTarget(target);
-                    }).bind(this),  peopleAccessory.ignoreReEnterExitSeconds * 1000)});
-                    break;
-                  }
+                response.statusCode = 200;
+                response.setHeader('Content-Type', 'application/json');
+
+                if(!theUrlParams.sensor || !theUrlParams.state) {
+                    response.statusCode = 404;
+                    response.setHeader("Content-Type", "text/plain");
+                    var errorText = "WebHook error: No sensor or state specified in request.";
+                    this.log(errorText);
+                    response.write(errorText);
+                    response.end();
                 }
-                response.write(JSON.stringify(responseBody));
-                response.end();
-              }
+                else {
+                    var sensor = theUrlParams.sensor.toLowerCase();
+                    var newState = (theUrlParams.state == "true");
+                    this.log('Received hook for ' + sensor + ' -> ' + newState);
+                    var responseBody = {
+                        success: true
+                    };
+                    for(var i = 0; i < this.peopleAccessories.length; i++){
+                        var peopleAccessory = this.peopleAccessories[i];
+                        var target = peopleAccessory.target
+                        if(peopleAccessory.name.toLowerCase() === sensor) {
+                            this.clearWebhookQueueForTarget(target);
+                            this.webhookQueue.push({"target": target, "newState": newState, "timeoutvar": setTimeout((function(){
+                                    this.runWebhookFromQueueForTarget(target);
+                                }).bind(this),  peopleAccessory.ignoreReEnterExitSeconds * 1000)});
+                            break;
+                        }
+                    }
+                    response.write(JSON.stringify(responseBody));
+                    response.end();
+                }
             }).bind(this));
         }).bind(this)).listen(this.webhookPort);
         this.log("WebHook: Started server on port '%s'.", this.webhookPort);
@@ -262,7 +262,8 @@ function PeopleAccessory(log, config, platform) {
             log: this.log
         },
         {
-            storage:'fs'
+            storage: 'fs',
+            disableTimer: true
         });
 
     this.initStateCache();
@@ -273,10 +274,10 @@ function PeopleAccessory(log, config, platform) {
 }
 
 PeopleAccessory.encodeState = function(state) {
-  if (state)
-      return Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
-  else
-      return Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
+    if (state)
+        return Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
+    else
+        return Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
 }
 
 PeopleAccessory.prototype.getState = function(callback) {
@@ -379,10 +380,10 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         if(lastWebhook) {
             lastWebhookMoment = moment(lastWebhook).format();
         }
-        
+
         this.historyService.addEntry(
             {
-                time: (newState) ? moment().unix() : moment(lastSuccessfulPing).unix(),
+                time: moment().unix(),
                 status: (newState) ? 1 : 0
             });
         this.log('Changed occupancy state for %s to %s. Last successful ping %s , last webhook %s .', this.target, newState, lastSuccessfulPingMoment, lastWebhookMoment);
@@ -426,7 +427,7 @@ function PeopleAllAccessory(log, name, platform) {
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
-  callback(null, PeopleAccessory.encodeState(this.getStateFromCache()));
+    callback(null, PeopleAccessory.encodeState(this.getStateFromCache()));
 }
 
 PeopleAllAccessory.prototype.identify = function(callback) {
