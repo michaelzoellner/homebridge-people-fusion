@@ -28,8 +28,8 @@ module.exports = function(homebridge) {
 function PeoplePlatform(log, config){
     this.log = log;
     this.threshold = config['threshold'] || 15;
-    this.anyoneSensor = config['anyoneSensor'] || true;
-    this.nooneSensor = config['nooneSensor'] || false;
+    this.anyoneSensor = ((typeof(config['anyoneSensor']) != "undefined" && config['anyoneSensor'] !== null)?config['anyoneSensor']:true);
+    this.nooneSensor = ((typeof(config['nooneSensor']) != "undefined" && config['nooneSensor'] !== null)?config['nooneSensor']:true);
     this.webhookPort = config["webhookPort"] || 51828;
     this.cacheDirectory = config["cacheDirectory"] || HomebridgeAPI.user.persistPath();
     this.pingInterval = config["pingInterval"] || 10000;
