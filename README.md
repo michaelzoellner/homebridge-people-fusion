@@ -93,5 +93,6 @@ On some docker-environments (alpine-based for example) it is possible that the p
 # Thanks
 Thanks to everyone who's helped contribute code, feedback and support.  In particular:
 * [PeteLawrence](https://github.com/PeteLawrence/homebridge-people) - for the plugin which this one is forked from
+* [simont77](https://github.com/simont77/fakegato-history) - for the fakegato-plugin
 * [wr](https://github.com/wr) - for adding in webhook support.
 * [benzman81](https://github.com/benzman81) - for porting the plugin over to be a Platform and improving how ping and webhooks work together, and numerous other fixes.
