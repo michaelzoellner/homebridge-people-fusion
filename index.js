@@ -3,6 +3,7 @@ var moment = require('moment');
 var request = require("request");
 var http = require('http');
 var url = require('url');
+const Gpio = require('pigpio').Gpio;
 var DEFAULT_REQUEST_TIMEOUT = 10000;
 var SENSOR_ANYONE = 'Anyone';
 var SENSOR_NOONE = 'No One';
@@ -16,9 +17,10 @@ module.exports = function(homebridge) {
     HomebridgeAPI = homebridge;
     FakeGatoHistoryService = require('fakegato-history')(homebridge);
 
-    homebridge.registerPlatform("homebridge-people", "PeopleX", PeoplePlatform);
+    homebridge.registerPlatform("homebridge-people-fusion", "PeopleFusion", PeoplePlatform);
     homebridge.registerAccessory("homebridge-people", "PeopleAccessory", PeopleAccessory);
     homebridge.registerAccessory("homebridge-people", "PeopleAllAccessory", PeopleAllAccessory);
+    homebridge.registerAccessory("homebridge-people", "SensorAccessory", SensorAccessory);
 }
 
 // #######################
@@ -38,6 +40,7 @@ function PeoplePlatform(log, config){
     this.storage = require('node-persist');
     this.storage.initSync({dir:this.cacheDirectory});
     this.webhookQueue = [];
+
 }
 
 PeoplePlatform.prototype = {
@@ -57,6 +60,10 @@ PeoplePlatform.prototype = {
         if(this.nooneSensor) {
             this.peopleNoOneAccessory = new PeopleAllAccessory(this.log, SENSOR_NOONE, this);
             this.accessories.push(this.peopleNoOneAccessory);
+        }
+        for(var i = 0; i < this.sensors.length; i++){
+            var sensorAccessory = new SensorAccessory(this.log, this.sensors[i], this);
+            this.accessories.push(sensorAccessory);
         }
         callback(this.accessories);
 
@@ -462,4 +469,250 @@ PeopleAllAccessory.prototype.refreshState = function() {
 
 PeopleAllAccessory.prototype.getServices = function() {
     return [this.service, this.accessoryService];
+}
+
+// #######################
+// Motion or door sensor
+// #######################
+
+function SensorAccessory(log, config, platform) {
+    this.log = log;
+    this.name = config['name'] + ' ' + config['type'];
+    this.pin = config['pin'];
+    this.platform = platform;
+    this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
+    this.isDoorClosed = true;
+    this.timesOpened = 0;
+    this.lastActivation = 0;
+
+    class LastActivationCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('LastActivation', 'E863F11A-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY
+                ]
+            });
+        }
+    }
+
+    class TimesOpenedCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('TimesOpened', 'E863F129-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY
+                ]
+            });
+        }
+    }
+
+    class ResetTotalCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('ResetTotal', 'E863F112-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    class Char118Characteristic extends Characteristic {
+        constructor(accessory) {
+            super('Char118', 'E863F118-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    class Char119Characteristic extends Characteristic {
+        constructor(accessory) {
+            super('Char119', 'E863F119-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    this.service = new Service.ContactSensor(this.name);
+    this.service
+        .getCharacteristic(Characteristic.ContactSensorState)
+        .on('get', this.getState.bind(this));
+
+    this.service.addCharacteristic(LastActivationCharacteristic);
+    this.service
+        .getCharacteristic(LastActivationCharacteristic)
+        .on('get', this.getLastActivation.bind(this));
+
+    this.service.addOptionalCharacteristic(TimesOpenedCharacteristic);
+    this.service.addCharacteristic(Char118Characteristic);
+    this.service.addCharacteristic(Char119Characteristic);
+
+    this.accessoryService = new Service.AccessoryInformation;
+    this.accessoryService
+        .setCharacteristic(Characteristic.Name, this.name)
+        .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
+        .setCharacteristic(Characteristic.Manufacturer, "Elgato");
+
+    this.historyService = new FakeGatoHistoryService("door", {
+            displayName: this.name,
+            log: this.log
+        },
+        {
+            storage: 'fs',
+            disableTimer: true,
+            path: HomebridgeAPI.user.storagePath() + '/accessories',
+            filename: 'history_' + "hps-" + this.name.toLowerCase() + '.json'
+        });
+
+    this.historyService.addCharacteristic(ResetTotalCharacteristic);
+
+    this.setDefaults();
+
+    this.arp();
+}
+
+SensorAccessory.encodeState = function(state) {
+    if (state) {
+        return Characteristic.ContactSensorState.CONTACT_DETECTED;
+    } else {
+        return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+    }
+}
+
+SensorAccessory.prototype.getState = function(callback) {
+    callback(null, SensorAccessory.encodeState(this.isDoorClosed));
+}
+
+SensorAccessory.prototype.getLastActivation = function(callback) {
+    callback(null, this.lastActivation);
+}
+
+SensorAccessory.prototype.identify = function(callback) {
+    this.log("Identify: %s", this.name);
+    callback();
+}
+
+SensorAccessory.prototype.setDefaults = function() {
+    this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(this.isDoorClosed));
+}
+
+SensorAccessory.prototype.getJSON = function() {
+  http.get(this.jsonURL, (res) => {
+    //this.log("Trying to read JSON");
+    const { statusCode } = res;
+    const contentType = res.headers['content-type'];
+
+    let error;
+    if (statusCode !== 200) {
+      error = new Error('Request Failed.\n' +
+      `Status Code: ${statusCode}`);
+    } else if (!/^application\/json/.test(contentType)) {
+      error = new Error('Invalid content-type.\n' +
+      `Expected application/json but received ${contentType}`);
+    }
+    if (error) {
+      res.resume();
+      this.log("Error when getting JSON via http");
+      return;
+    }
+
+    //this.log("Received data.");
+
+    res.setEncoding('utf8');
+    let rawData = '';
+    res.on('data', (chunk) => { rawData += chunk; });
+    res.on('end', () => {
+      try {
+        //this.log('Arrived here 1')
+        const parsedData = JSON.parse(rawData);
+        //this.log('Arrived here 2')
+        this.parsedSensorData = parsedData;
+        this.rawDataTime = 0;
+        this.rawDataTime += moment().unix();
+        //this.log("JSON data saved for " + this.name);
+        //this.log(parsedData)
+      } catch (error) {
+        this.log("Error parsing the JSON");
+      }
+    });
+  }).on('error', (error) => {
+    this.log("Error during http request");
+  });
+}
+
+SensorAccessory.prototype.arp = function() {
+  var checkIntervalInSeconds = this.checkInterval/1000;
+  if (this.rawDataTime + checkIntervalInSeconds < moment().unix()) {
+    this.getJSON();
+  }
+  if (this.rawDataTime > this.sensorDataTime) {
+    var newState = false;
+    if (!this.parsedSensorData[this.jsonStatusName]) {
+      newState = true;
+    }
+    this.setNewState(newState);
+    //this.log('New data processed.');
+  } else {
+    //this.log('No new data.');
+  }
+
+  setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
+}
+
+SensorAccessory.prototype.setNewState = function(newState) {
+    var oldState = this.isDoorClosed;
+    if (oldState != newState) {
+        this.isDoorClosed = newState;
+        this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(newState));
+
+        var now = moment().unix();
+        this.lastActivation = now - this.historyService.getInitialTime();
+
+        this.historyService.addEntry(
+            {
+                time: moment().unix(),
+                status: (newState) ? 0 : 1
+            });
+        this.log('Changed Contact sensor state for %s to %s.', this.name, newState);
+    }
+}
+
+SensorAccessory.prototype.getServices = function() {
+
+    var servicesList = [this.service];
+
+    if(this.historyService) {
+        servicesList.push(this.historyService)
+    }
+    if(this.accessoryService) {
+        servicesList.push(this.accessoryService)
+    }
+
+    return servicesList;
+
 }
