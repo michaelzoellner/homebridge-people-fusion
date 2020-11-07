@@ -37,6 +37,7 @@ function PeoplePlatform(log, config){
     this.pingInterval = config["pingInterval"] || 10000;
     this.ignoreReEnterExitSeconds = config["ignoreReEnterExitSeconds"] || 0;
     this.people = config['people'];
+    this.sensors = config['sensors'];
     this.storage = require('node-persist');
     this.storage.initSync({dir:this.cacheDirectory});
     this.webhookQueue = [];
@@ -478,7 +479,7 @@ PeopleAllAccessory.prototype.getServices = function() {
 function SensorAccessory(log, config, platform) {
     this.log = log;
     this.name = config['name'] + ' ' + config['type'];
-    this.pin = config['pin'];
+    this.pin = new Gpio(config['pin'], {mode: Gpio.INPUT});
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
@@ -621,66 +622,11 @@ SensorAccessory.prototype.setDefaults = function() {
     this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(this.isDoorClosed));
 }
 
-SensorAccessory.prototype.getJSON = function() {
-  http.get(this.jsonURL, (res) => {
-    //this.log("Trying to read JSON");
-    const { statusCode } = res;
-    const contentType = res.headers['content-type'];
-
-    let error;
-    if (statusCode !== 200) {
-      error = new Error('Request Failed.\n' +
-      `Status Code: ${statusCode}`);
-    } else if (!/^application\/json/.test(contentType)) {
-      error = new Error('Invalid content-type.\n' +
-      `Expected application/json but received ${contentType}`);
-    }
-    if (error) {
-      res.resume();
-      this.log("Error when getting JSON via http");
-      return;
-    }
-
-    //this.log("Received data.");
-
-    res.setEncoding('utf8');
-    let rawData = '';
-    res.on('data', (chunk) => { rawData += chunk; });
-    res.on('end', () => {
-      try {
-        //this.log('Arrived here 1')
-        const parsedData = JSON.parse(rawData);
-        //this.log('Arrived here 2')
-        this.parsedSensorData = parsedData;
-        this.rawDataTime = 0;
-        this.rawDataTime += moment().unix();
-        //this.log("JSON data saved for " + this.name);
-        //this.log(parsedData)
-      } catch (error) {
-        this.log("Error parsing the JSON");
-      }
-    });
-  }).on('error', (error) => {
-    this.log("Error during http request");
-  });
-}
-
 SensorAccessory.prototype.arp = function() {
-  var checkIntervalInSeconds = this.checkInterval/1000;
-  if (this.rawDataTime + checkIntervalInSeconds < moment().unix()) {
-    this.getJSON();
-  }
-  if (this.rawDataTime > this.sensorDataTime) {
-    var newState = false;
-    if (!this.parsedSensorData[this.jsonStatusName]) {
-      newState = true;
-    }
-    this.setNewState(newState);
-    //this.log('New data processed.');
-  } else {
-    //this.log('No new data.');
-  }
-
+  var newState = false;
+  newState = this.pin.digitalRead();
+  
+  this.setNewState(newState);
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
 
