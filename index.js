@@ -629,7 +629,7 @@ SensorAccessory.prototype.readInput = function(err) {
   var value = 2;
   value = gpio.read(7, function(err, val) {
       if (err) throw err;
-      return val;
+      return 3;
   });
   this.log('value = ' + value);
 }
