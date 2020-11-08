@@ -626,9 +626,12 @@ SensorAccessory.prototype.setDefaults = function() {
 SensorAccessory.prototype.arp = function() {
   var newState = false;
   this.log('Been here.');
-  newState = value = gpio.read(this.pin);
+  gpio.read(7, function(err, value) {
+        if (err) throw err;
+        console.log('The value is ' + value);
+        newState = value;
+    });
   this.log('Done that.');
-  this.log(newState);
 
   this.setNewState(newState);
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
