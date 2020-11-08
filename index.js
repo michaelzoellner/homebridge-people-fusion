@@ -626,14 +626,15 @@ SensorAccessory.prototype.setDefaults = function() {
 SensorAccessory.prototype.readInput = function(err) {
   this.log('worked');
   if (err) throw err;
-  var value = 2;
+  //var value = 2;
   gpio.read(7, this.processInput.bind(this));
-  this.log('value = ' + value);
+  //this.log('value = ' + value);
 }
 
 SensorAccessory.prototype.processInput = function(err,value) {
   if (err) throw err;
   this.log('OK');
+  this.log('value = ' + value);
   this.setNewState(value);
 }
 
