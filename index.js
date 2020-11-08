@@ -626,7 +626,7 @@ SensorAccessory.prototype.setDefaults = function() {
 SensorAccessory.prototype.readInput = function(err) {
   //this.log('worked');
   if (err) {
-    this.log('Error when reading data of ' + this.name ' + ' with message: ' + err.message);
+    this.log('Error when reading data of ' + this.name + ' with message: ' + err.message);
     throw err;
   }
   //var value = 2;
