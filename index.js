@@ -19,9 +19,9 @@ module.exports = function(homebridge) {
     FakeGatoHistoryService = require('fakegato-history')(homebridge);
 
     homebridge.registerPlatform("homebridge-people-fusion", "PeopleFusion", PeoplePlatform);
-    homebridge.registerAccessory("homebridge-people", "PeopleAccessory", PeopleAccessory);
-    homebridge.registerAccessory("homebridge-people", "PeopleAllAccessory", PeopleAllAccessory);
-    homebridge.registerAccessory("homebridge-people", "SensorAccessory", SensorAccessory);
+    homebridge.registerAccessory("homebridge-people-fusion", "PeopleAccessory", PeopleAccessory);
+    homebridge.registerAccessory("homebridge-people-fusion", "PeopleAllAccessory", PeopleAllAccessory);
+    homebridge.registerAccessory("homebridge-people-fusion", "SensorAccessory", SensorAccessory);
 }
 
 // #######################
@@ -624,22 +624,20 @@ SensorAccessory.prototype.setDefaults = function() {
 }
 
 SensorAccessory.prototype.readInput = function(err) {
+  this.log('worked');
   if (err) throw err;
   gpio.read(7, function(err, value) {
       if (err) throw err;
   });
+  return value;
 }
 
 SensorAccessory.prototype.arp = function() {
-  var newState = false;
+  //var newState = false;
   this.log('Been here.');
-  gpio.setup(7, gpio.DIR_IN, this.readInput);
-  newState = gpio.read(7, function(err,value) {
-    if (err) throw err;
-    return value;
-  })
+  gpio.setup(7, gpio.DIR_IN, this.readInput).bind(this);
   this.log('Done that.');
-  this.log('newState = ' + newState);
+  //this.log('newState = ' + newState);
 
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
