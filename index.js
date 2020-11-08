@@ -623,13 +623,12 @@ SensorAccessory.prototype.setDefaults = function() {
     this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(this.isDoorClosed));
 }
 
-SensorAccessory.prototype.readInput = function(err) {
+SensorAccessory.prototype.readInput = function(err,value) {
   if (err) throw err;
   gpio.read(7, function(err, value) {
       if (err) throw err;
       return value;
   });
-  this.log('value')
 }
 
 SensorAccessory.prototype.arp = function() {
