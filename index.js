@@ -626,14 +626,18 @@ SensorAccessory.prototype.setDefaults = function() {
 SensorAccessory.prototype.arp = function() {
   var newState = false;
   this.log('Been here.');
-  gpio.read(this.pin, function(err, value) {
-        if (err) throw err;
-        console.log('The value is ' + value);
-        newState = value;
+  try {
+    gpio.read(this.p, function(err, value) {
+      if (err) throw err;
+      console.log('The value is ' + value);
+      newState = value;
     });
-  this.log('Done that.');
+    this.log('Done that.');
+    this.setNewState(newState);
+  } catch(err) {
+    this.log('Error was: ' + err.message);
+  }
 
-  this.setNewState(newState);
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
 
