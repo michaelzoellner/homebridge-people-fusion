@@ -3,7 +3,7 @@ var moment = require('moment');
 var request = require("request");
 var http = require('http');
 var url = require('url');
-const Gpio = require('pigpio').Gpio;
+var gpio = require('../rpi-gpio');
 var DEFAULT_REQUEST_TIMEOUT = 10000;
 var SENSOR_ANYONE = 'Anyone';
 var SENSOR_NOONE = 'No One';
@@ -479,7 +479,8 @@ PeopleAllAccessory.prototype.getServices = function() {
 function SensorAccessory(log, config, platform) {
     this.log = log;
     this.name = config['name'] + ' ' + config['type'];
-    this.pin = new Gpio(config['pin'], {mode: Gpio.INPUT});
+    this.pin = config['pin'];
+    gpio.setup(this.pin, gpio.DIR_IN, readInput);
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
@@ -624,8 +625,15 @@ SensorAccessory.prototype.setDefaults = function() {
 
 SensorAccessory.prototype.arp = function() {
   var newState = false;
-  newState = this.pin.digitalRead();
-  
+  function readInput(err) {
+    if (err) throw err;
+    gpio.read(this.pin, function(err, value) {
+      if (err) throw err;
+      console.log('The value is ' + value);
+      newState = value;
+    });
+  }
+
   this.setNewState(newState);
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
