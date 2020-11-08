@@ -480,7 +480,7 @@ function SensorAccessory(log, config, platform) {
     this.log = log;
     this.name = config['name'] + ' ' + config['type'];
     this.pin = config['pin'];
-    gpio.setup(this.pin, gpio.DIR_IN, readInput);
+    gpio.setup(this.pin, gpio.DIR_IN);
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
@@ -625,14 +625,10 @@ SensorAccessory.prototype.setDefaults = function() {
 
 SensorAccessory.prototype.arp = function() {
   var newState = false;
-  function readInput(err) {
-    if (err) throw err;
-    gpio.read(this.pin, function(err, value) {
-      if (err) throw err;
-      console.log('The value is ' + value);
-      newState = value;
-    });
-  }
+  this.log('Been here.');
+  newState = value = gpio.read(this.pin);
+  this.log('Done that.');
+  this.log(newState);
 
   this.setNewState(newState);
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
