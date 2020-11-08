@@ -625,10 +625,12 @@ SensorAccessory.prototype.setDefaults = function() {
 
 SensorAccessory.prototype.readInput = function(err) {
   if (err) throw err;
-  gpio.read(7, function(err, value) {
+  int val = 2;
+  val = gpio.read(7, function(err, value) {
       if (err) throw err;
+      return value;
   });
-  this.setNewState(value);
+  this.setNewState(val);
 }
 
 SensorAccessory.prototype.arp = function() {
