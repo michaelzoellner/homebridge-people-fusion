@@ -2,7 +2,7 @@
 ***
 # homebridge-people-x
 This is a plugin for [homebridge](https://github.com/nfarina/homebridge). It monitors who is at home, based on their smartphone being seen on the network recently.
-If you use the EVE.app you can also see the presence history of every person-sensor (powered by fakegato) 
+If you use the EVE.app you can also see the presence history of every person-sensor (powered by fakegato)
 
 It can also receive webhooks sent by location-aware mobile apps (such as [Locative](https://my.locative.io), which can use iBeacons and geofencing to provide faster and more accurate location information.
 
@@ -16,29 +16,37 @@ It can also receive webhooks sent by location-aware mobile apps (such as [Locati
 
 ```
 "platforms": [
-    {
-        "platform": "PeopleX",
-        "threshold" : 15,
-        "anyoneSensor" : true,
-        "nooneSensor" : false,
+{
+        "platform": "PeopleFusion",
+        "threshold": 15,
+        "anyoneSensor": true,
+        "nooneSensor": false,
         "webhookPort": 51828,
         "cacheDirectory": "./.node-persist/storage",
         "pingInterval": 10000,
         "ignoreReEnterExitSeconds": 0,
-        "people" : [
+        "people": [
             {
-                "name" : "Pete",
-                "target" : "PetesiPhone",
-                "threshold" : 15,
+                "name": "Mugi",
+                "target": "192.168.178.20",
+                "threshold": 15,
                 "pingInterval": 10000,
                 "ignoreReEnterExitSeconds": 0
             },
             {
-                "name" : "Someone Else",
-                "target" : "192.168.1.68",
-                "threshold" : 15,
+                "name": "Naki",
+                "target": "192.168.178.125",
+                "threshold": 15,
                 "pingInterval": 10000,
                 "ignoreReEnterExitSeconds": 0
+            }
+        ],
+        "sensors": [
+            {
+                "name": "Haustuere",
+                "type": "contact",
+                "pin": 7,
+                "checkInterval": 3000
             }
         ]
     }
@@ -89,7 +97,7 @@ By default homebridge-people listens on port 51828 for updates.  This can be cha
 On some versions of raspbian, users are not able to use the ping program by default. If none of your devices show online try running ```sudo chmod u+s /bin/ping```. Thanks to oberstmueller for the tip.
 
 ## Running in a docker-environment
-On some docker-environments (alpine-based for example) it is possible that the ping does not. Please try to install _iptools_ in this case via ```apk add iputils --no-cache``` 
+On some docker-environments (alpine-based for example) it is possible that the ping does not. Please try to install _iptools_ in this case via ```apk add iputils --no-cache```
 
 # Thanks
 Thanks to everyone who's helped contribute code, feedback and support.  In particular:
