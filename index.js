@@ -631,9 +631,9 @@ SensorAccessory.prototype.arp = function() {
     gpio.read(this.pin, function(err, value) {
       if (err) throw err;
       this.log('The value is ' + value);
+      this.setNewState(value);
     });
   }
-  newState = value;
 
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
