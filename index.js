@@ -627,7 +627,6 @@ SensorAccessory.prototype.readInput = function(err) {
   if (err) throw err;
   gpio.read(7, function(err, value) {
       if (err) throw err;
-      this.log('The value is ' + value);
   });
 }
 
