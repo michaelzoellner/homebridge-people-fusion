@@ -624,7 +624,7 @@ SensorAccessory.prototype.setDefaults = function() {
 }
 
 SensorAccessory.prototype.readInput = function(err) {
-  this.log('worked');
+  //this.log('worked');
   if (err) throw err;
   //var value = 2;
   gpio.read(this.pin, this.processInput.bind(this));
@@ -633,16 +633,16 @@ SensorAccessory.prototype.readInput = function(err) {
 
 SensorAccessory.prototype.processInput = function(err,value) {
   if (err) throw err;
-  this.log('OK');
-  this.log('value = ' + value);
+  //this.log('OK');
+  this.log('value for ' + this.name + ' is ' + value);
   this.setNewState(value);
 }
 
 SensorAccessory.prototype.arp = function() {
   //var newState = false;
-  this.log('Been here.');
+  //this.log('Been here.');
   gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
-  this.log('Done that.');
+  //this.log('Done that.');
   //this.log('newState = ' + newState);
 
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
