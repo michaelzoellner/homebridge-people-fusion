@@ -624,17 +624,19 @@ SensorAccessory.prototype.setDefaults = function() {
 
 SensorAccessory.prototype.arp = function() {
   var newState = false;
-  gpio.setup(this.pin, gpio.DIR_IN, readInput);
-  this.log('Been here.');
-  function readInput(err) {
-    if (err) throw err;
-    gpio.read(this.pin, function(err, value) {
+  (async () => {
+    gpio.setup(this.pin, gpio.DIR_IN, readInput);
+    this.log('Been here.');
+    function readInput(err) {
       if (err) throw err;
-      this.log('The value is ' + value);
-    });
-  }
-  newState = value;
-
+      gpio.read(this.pin, function(err, value) {
+        if (err) throw err;
+        this.log('The value is ' + value);
+        this.setNewState(value);
+      });
+    }
+  })()
+  
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
 
