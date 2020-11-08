@@ -623,16 +623,17 @@ SensorAccessory.prototype.setDefaults = function() {
     this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(this.isDoorClosed));
 }
 
+SensorAccessory.prototype.readInput(err) {
+  if (err) throw err;
+  gpio.read(7, function(err, value) {
+      if (err) throw err;
+      this.log('The value is ' + value);
+  });
+}
+
 SensorAccessory.prototype.arp = function() {
   var newState = false;
-  gpio.setup(this.pin, gpio.DIR_IN, readInput);
-  function readInput(err) {
-    if (err) throw err;
-    gpio.read(7, function(err, value) {
-        if (err) throw err;
-        this.log('The value is ' + value);
-    });
-  }
+  gpio.setup(7, gpio.DIR_IN, this.readInput());
 
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
