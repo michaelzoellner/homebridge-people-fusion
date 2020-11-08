@@ -634,8 +634,9 @@ SensorAccessory.prototype.readInput = function(err,value) {
 SensorAccessory.prototype.arp = function() {
   var newState = false;
   this.log('Been here.');
-  gpio.setup(7, gpio.DIR_IN, this.readInput);
+  newState = gpio.setup(7, gpio.DIR_IN, this.readInput);
   this.log('Done that.');
+  this.log('newState = ' + newState);
 
   setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
