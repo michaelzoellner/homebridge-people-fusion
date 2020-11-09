@@ -65,7 +65,7 @@ PeoplePlatform.prototype = {
             this.accessories.push(this.peopleNoOneAccessory);
         }
         for(var i = 0; i < this.sensors.length; i++){
-          switch (this.sensors[i]['type'] {
+          switch (this.sensors[i]['type']) {
             case 'contact':
               var sensorAccessory = new ContactSensorAccessory(this.log, this.sensors[i], this);
               this.accessories.push(sensorAccessory);
