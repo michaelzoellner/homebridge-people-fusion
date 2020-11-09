@@ -191,83 +191,83 @@ function PeopleAccessory(log, config, platform) {
     this.ignoreReEnterExitSeconds = config['ignoreReEnterExitSeconds'] || this.platform.ignoreReEnterExitSeconds;
     this.stateCache = false;
 
-    class LastActivationCharacteristic extends Characteristic {
-        constructor(accessory) {
-            super('LastActivation', 'E863F11A-079E-48FF-8F27-9C2605A29F52');
-            this.setProps({
-                format: Characteristic.Formats.UINT32,
-                unit: Characteristic.Units.SECONDS,
-                perms: [
-                    Characteristic.Perms.READ,
-                    Characteristic.Perms.NOTIFY
-                ]
-            });
-        }
-    }
+    // class LastActivationCharacteristic extends Characteristic {
+    //     constructor(accessory) {
+    //         super('LastActivation', 'E863F11A-079E-48FF-8F27-9C2605A29F52');
+    //         this.setProps({
+    //             format: Characteristic.Formats.UINT32,
+    //             unit: Characteristic.Units.SECONDS,
+    //             perms: [
+    //                 Characteristic.Perms.READ,
+    //                 Characteristic.Perms.NOTIFY
+    //             ]
+    //         });
+    //     }
+    // }
+    //
+    // class SensitivityCharacteristic extends Characteristic {
+    //     constructor(accessory) {
+    //         super('Sensitivity', 'E863F120-079E-48FF-8F27-9C2605A29F52');
+    //         this.setProps({
+    //             format: Characteristic.Formats.UINT8,
+    //             minValue: 0,
+    //             maxValue: 7,
+    //             validValues: [0, 4, 7],
+    //             perms: [
+    //                 Characteristic.Perms.READ,
+    //                 Characteristic.Perms.NOTIFY,
+    //                 Characteristic.Perms.WRITE
+    //             ]
+    //         });
+    //     }
+    // }
+    //
+    // class DurationCharacteristic extends Characteristic {
+    //     constructor(accessory) {
+    //         super('Duration', 'E863F12D-079E-48FF-8F27-9C2605A29F52');
+    //         this.setProps({
+    //             format: Characteristic.Formats.UINT16,
+    //             unit: Characteristic.Units.SECONDS,
+    //             minValue: 5,
+    //             maxValue: 15 * 3600,
+    //             validValues: [
+    //                 5, 10, 20, 30,
+    //                 1 * 60, 2 * 60, 3 * 60, 5 * 60, 10 * 60, 20 * 60, 30 * 60,
+    //                 1 * 3600, 2 * 3600, 3 * 3600, 5 * 3600, 10 * 3600, 12 * 3600, 15 * 3600
+    //             ],
+    //             perms: [
+    //                 Characteristic.Perms.READ,
+    //                 Characteristic.Perms.NOTIFY,
+    //                 Characteristic.Perms.WRITE
+    //             ]
+    //         });
+    //     }
+    // }
 
-    class SensitivityCharacteristic extends Characteristic {
-        constructor(accessory) {
-            super('Sensitivity', 'E863F120-079E-48FF-8F27-9C2605A29F52');
-            this.setProps({
-                format: Characteristic.Formats.UINT8,
-                minValue: 0,
-                maxValue: 7,
-                validValues: [0, 4, 7],
-                perms: [
-                    Characteristic.Perms.READ,
-                    Characteristic.Perms.NOTIFY,
-                    Characteristic.Perms.WRITE
-                ]
-            });
-        }
-    }
-
-    class DurationCharacteristic extends Characteristic {
-        constructor(accessory) {
-            super('Duration', 'E863F12D-079E-48FF-8F27-9C2605A29F52');
-            this.setProps({
-                format: Characteristic.Formats.UINT16,
-                unit: Characteristic.Units.SECONDS,
-                minValue: 5,
-                maxValue: 15 * 3600,
-                validValues: [
-                    5, 10, 20, 30,
-                    1 * 60, 2 * 60, 3 * 60, 5 * 60, 10 * 60, 20 * 60, 30 * 60,
-                    1 * 3600, 2 * 3600, 3 * 3600, 5 * 3600, 10 * 3600, 12 * 3600, 15 * 3600
-                ],
-                perms: [
-                    Characteristic.Perms.READ,
-                    Characteristic.Perms.NOTIFY,
-                    Characteristic.Perms.WRITE
-                ]
-            });
-        }
-    }
-
-    this.service = new Service.MotionSensor(this.name);
+    this.service = new Service.OccupancySensor(this.name);
     this.service
-        .getCharacteristic(Characteristic.MotionDetected)
+        .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
 
-    this.service.addCharacteristic(LastActivationCharacteristic);
-    this.service
-        .getCharacteristic(LastActivationCharacteristic)
-        .on('get', this.getLastActivation.bind(this));
-
-
-    this.service.addCharacteristic(SensitivityCharacteristic);
-    this.service
-        .getCharacteristic(SensitivityCharacteristic)
-        .on('get', function(callback){
-            callback(null, 4);
-        }.bind(this));
-
-    this.service.addCharacteristic(DurationCharacteristic);
-    this.service
-        .getCharacteristic(DurationCharacteristic)
-        .on('get', function(callback){
-            callback(null, 5);
-        }.bind(this));
+    // this.service.addCharacteristic(LastActivationCharacteristic);
+    // this.service
+    //     .getCharacteristic(LastActivationCharacteristic)
+    //     .on('get', this.getLastActivation.bind(this));
+    //
+    //
+    // this.service.addCharacteristic(SensitivityCharacteristic);
+    // this.service
+    //     .getCharacteristic(SensitivityCharacteristic)
+    //     .on('get', function(callback){
+    //         callback(null, 4);
+    //     }.bind(this));
+    //
+    // this.service.addCharacteristic(DurationCharacteristic);
+    // this.service
+    //     .getCharacteristic(DurationCharacteristic)
+    //     .on('get', function(callback){
+    //         callback(null, 5);
+    //     }.bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
@@ -834,7 +834,7 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
-    this.log('isActive called.');
+    //this.log('isActive called.');
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
 
     if (lastSeenUnix) {
@@ -843,7 +843,7 @@ MotionSensorAccessory.prototype.isActive = function() {
         var activeThreshold = moment().subtract(this.threshold, 'm');
         //this.log('activeThreshold is ' + activeThreshold);
         var result = lastSeenMoment.isAfter(activeThreshold);
-        this.log('result is ' + result);
+        //this.log('result is ' + result);
         return result;
     }
     return false;
@@ -866,7 +866,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  this.log('Read value for ' + this.name + ' is ' + value);
+  //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     //this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
