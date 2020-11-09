@@ -488,7 +488,8 @@ PeopleAllAccessory.prototype.getServices = function() {
 
 function ContactSensorAccessory(log, config, platform) {
     this.log = log;
-    this.name = config['name'] + ' ' + config['type'];
+    this.name = config['name'];
+    this.type = config['type'];
     this.pin = config['pin'];
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
@@ -836,9 +837,12 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 
 MotionSensorAccessory.prototype.isActive = function() {
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
+    this.log('lastSeenUnix is ' + lastSeenUnix);
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
+        this.log('lastSeenMoment is ' + lastSeenMoment);
         var activeThreshold = moment().subtract(this.threshold, 'm');
+        this.log('activeThreshold is ' + activeThreshold);
         return lastSeenMoment.isAfter(activeThreshold);
     }
     return false;
@@ -861,9 +865,9 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  this.log('Read value for ' + this.name + ' is ' + value);
+  //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
-    this.log('Setting lastMotion for ' + this.name);
+    //this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
     var newState = this.isActive();
     this.setNewState(newState);
