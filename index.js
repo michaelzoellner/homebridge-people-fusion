@@ -596,9 +596,7 @@ function ContactSensorAccessory(log, config, platform) {
         },
         {
             storage: 'fs',
-            disableTimer: true,
-            path: HomebridgeAPI.user.storagePath() + '/accessories',
-            filename: 'history_' + "hps-" + this.name.toLowerCase() + '.json'
+            disableTimer: true
         });
 
     this.historyService.addCharacteristic(ResetTotalCharacteristic);
