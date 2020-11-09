@@ -881,6 +881,8 @@ MotionSensorAccessory.prototype.arp = function() {
 MotionSensorAccessory.prototype.setNewState = function(newState) {
     this.log('Arrived at setNewState');
     var oldState = this.stateCache;
+    this.log('oldState is ' + oldState);
+    this.log('newState is ' + newState);
     if (oldState != newState) {
         this.stateCache = newState;
         this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
