@@ -872,9 +872,9 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   if (value) {
     //this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
-    var newState = this.isActive();
-    this.setNewState(newState);
   }
+  var newState = this.isActive();
+  this.setNewState(newState);
 }
 
 MotionSensorAccessory.prototype.arp = function() {
