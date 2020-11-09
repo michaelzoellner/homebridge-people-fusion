@@ -882,11 +882,14 @@ MotionSensorAccessory.prototype.arp = function() {
   //this.log('Been here.');
   try {
     gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
+  } catch (err) {
+    this.log('GPIO setup failed with ' + err.message);
   }
   //this.log('Done that.');
   //this.log('newState = ' + newState);
-
-  setTimeout(MotionSensorAccessory.prototype.arp.bind(this), this.checkInterval);
+  finally {
+    setTimeout(MotionSensorAccessory.prototype.arp.bind(this), this.checkInterval);
+  }
 }
 
 MotionSensorAccessory.prototype.setNewState = function(newState) {
