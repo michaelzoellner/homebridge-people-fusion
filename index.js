@@ -21,7 +21,8 @@ module.exports = function(homebridge) {
     homebridge.registerPlatform("homebridge-people-fusion", "PeopleFusion", PeoplePlatform);
     homebridge.registerAccessory("homebridge-people-fusion", "PeopleAccessory", PeopleAccessory);
     homebridge.registerAccessory("homebridge-people-fusion", "PeopleAllAccessory", PeopleAllAccessory);
-    homebridge.registerAccessory("homebridge-people-fusion", "SensorAccessory", SensorAccessory);
+    homebridge.registerAccessory("homebridge-people-fusion", "ContactSensorAccessory", ContactSensorAccessory);
+    homebridge.registerAccessory("homebridge-people-fusion", "MotionSensorAccessory", MotionSensorAccessory);
 }
 
 // #######################
@@ -64,8 +65,17 @@ PeoplePlatform.prototype = {
             this.accessories.push(this.peopleNoOneAccessory);
         }
         for(var i = 0; i < this.sensors.length; i++){
-            var sensorAccessory = new SensorAccessory(this.log, this.sensors[i], this);
-            this.accessories.push(sensorAccessory);
+          switch (this.sensors[i]['type'] {
+            case 'contact':
+              var sensorAccessory = new ContactSensorAccessory(this.log, this.sensors[i], this);
+              this.accessories.push(sensorAccessory);
+            break;
+            case 'motion':
+              var sensorAccessory = new MotionSensorAccessory(this.log, this.sensors[i], this);
+              this.accessories.push(sensorAccessory);
+            break;
+          })
+
         }
         callback(this.accessories);
 
@@ -474,10 +484,10 @@ PeopleAllAccessory.prototype.getServices = function() {
 }
 
 // #######################
-// Motion or door sensor
+// Contact sensor
 // #######################
 
-function SensorAccessory(log, config, platform) {
+function ContactSensorAccessory(log, config, platform) {
     this.log = log;
     this.name = config['name'] + ' ' + config['type'];
     this.pin = config['pin'];
@@ -598,7 +608,7 @@ function SensorAccessory(log, config, platform) {
     this.arp();
 }
 
-SensorAccessory.encodeState = function(state) {
+ContactSensorAccessory.encodeState = function(state) {
     if (state) {
         return Characteristic.ContactSensorState.CONTACT_DETECTED;
     } else {
@@ -606,27 +616,27 @@ SensorAccessory.encodeState = function(state) {
     }
 }
 
-SensorAccessory.prototype.getState = function(callback) {
-    callback(null, SensorAccessory.encodeState(this.isDoorClosed));
+ContactSensorAccessory.prototype.getState = function(callback) {
+    callback(null, ContactSensorAccessory.encodeState(this.isDoorClosed));
 }
 
-SensorAccessory.prototype.getLastActivation = function(callback) {
+ContactSensorAccessory.prototype.getLastActivation = function(callback) {
     callback(null, this.lastActivation);
 }
 
-SensorAccessory.prototype.identify = function(callback) {
+ContactSensorAccessory.prototype.identify = function(callback) {
     this.log("Identify: %s", this.name);
     callback();
 }
 
-SensorAccessory.prototype.setDefaults = function() {
-    this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(this.isDoorClosed));
+ContactSensorAccessory.prototype.setDefaults = function() {
+    this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(ContactSensorAccessory.encodeState(this.isDoorClosed));
 }
 
-SensorAccessory.prototype.readInput = function(err) {
+ContactSensorAccessory.prototype.readInput = function(err) {
   //this.log('worked');
   if (err) {
-    this.log('Error when reading data of ' + this.name + ' with message: ' + err.message);
+    this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
     throw err;
   }
   //var value = 2;
@@ -634,28 +644,31 @@ SensorAccessory.prototype.readInput = function(err) {
   //this.log('value = ' + value);
 }
 
-SensorAccessory.prototype.processInput = function(err,value) {
-  if (err) throw err;
+ContactSensorAccessory.prototype.processInput = function(err,value) {
+  if (err) {
+    this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+    throw err;
+  }
   //this.log('OK');
   this.log('value for ' + this.name + ' is ' + value);
   this.setNewState(value);
 }
 
-SensorAccessory.prototype.arp = function() {
+ContactSensorAccessory.prototype.arp = function() {
   //var newState = false;
   //this.log('Been here.');
   gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
   //this.log('Done that.');
   //this.log('newState = ' + newState);
 
-  setTimeout(SensorAccessory.prototype.arp.bind(this), this.checkInterval);
+  setTimeout(ContactSensorAccessory.prototype.arp.bind(this), this.checkInterval);
 }
 
-SensorAccessory.prototype.setNewState = function(newState) {
+ContactSensorAccessory.prototype.setNewState = function(newState) {
     var oldState = this.isDoorClosed;
     if (oldState != newState) {
         this.isDoorClosed = newState;
-        this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(SensorAccessory.encodeState(newState));
+        this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(ContactSensorAccessory.encodeState(newState));
 
         var now = moment().unix();
         this.lastActivation = now - this.historyService.getInitialTime();
@@ -669,7 +682,220 @@ SensorAccessory.prototype.setNewState = function(newState) {
     }
 }
 
-SensorAccessory.prototype.getServices = function() {
+ContactSensorAccessory.prototype.getServices = function() {
+
+    var servicesList = [this.service];
+
+    if(this.historyService) {
+        servicesList.push(this.historyService)
+    }
+    if(this.accessoryService) {
+        servicesList.push(this.accessoryService)
+    }
+
+    return servicesList;
+
+}
+// #######################
+// Motion sensor
+// #######################
+
+function MotionSensorAccessory(log, config, platform) {
+    this.log = log;
+    this.name = config['name'] + ' ' + config['type'];
+    this.pin = config['pin'];
+    this.platform = platform;
+    this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
+    this.isDoorClosed = true;
+    this.timesOpened = 0;
+    this.lastActivation = 0;
+
+    class LastActivationCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('LastActivation', 'E863F11A-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY
+                ]
+            });
+        }
+    }
+
+    class TimesOpenedCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('TimesOpened', 'E863F129-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY
+                ]
+            });
+        }
+    }
+
+    class ResetTotalCharacteristic extends Characteristic {
+        constructor(accessory) {
+            super('ResetTotal', 'E863F112-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    class Char118Characteristic extends Characteristic {
+        constructor(accessory) {
+            super('Char118', 'E863F118-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    class Char119Characteristic extends Characteristic {
+        constructor(accessory) {
+            super('Char119', 'E863F119-079E-48FF-8F27-9C2605A29F52');
+            this.setProps({
+                format: Characteristic.Formats.UINT32,
+                unit: Characteristic.Units.SECONDS,
+                perms: [
+                    Characteristic.Perms.READ,
+                    Characteristic.Perms.NOTIFY,
+                    Characteristic.Perms.WRITE
+                ]
+            });
+        }
+    }
+
+    this.service = new Service.ContactSensor(this.name);
+    this.service
+        .getCharacteristic(Characteristic.ContactSensorState)
+        .on('get', this.getState.bind(this));
+
+    this.service.addCharacteristic(LastActivationCharacteristic);
+    this.service
+        .getCharacteristic(LastActivationCharacteristic)
+        .on('get', this.getLastActivation.bind(this));
+
+    this.service.addOptionalCharacteristic(TimesOpenedCharacteristic);
+    this.service.addCharacteristic(Char118Characteristic);
+    this.service.addCharacteristic(Char119Characteristic);
+
+    this.accessoryService = new Service.AccessoryInformation;
+    this.accessoryService
+        .setCharacteristic(Characteristic.Name, this.name)
+        .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
+        .setCharacteristic(Characteristic.Manufacturer, "Elgato");
+
+    this.historyService = new FakeGatoHistoryService("door", {
+            displayName: this.name,
+            log: this.log
+        },
+        {
+            storage: 'fs',
+            disableTimer: true,
+            path: HomebridgeAPI.user.storagePath() + '/accessories',
+            filename: 'history_' + "hps-" + this.name.toLowerCase() + '.json'
+        });
+
+    this.historyService.addCharacteristic(ResetTotalCharacteristic);
+
+    this.setDefaults();
+
+    this.arp();
+}
+
+MotionSensorAccessory.encodeState = function(state) {
+    if (state) {
+        return Characteristic.ContactSensorState.CONTACT_DETECTED;
+    } else {
+        return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
+    }
+}
+
+MotionSensorAccessory.prototype.getState = function(callback) {
+    callback(null, MotionSensorAccessory.encodeState(this.isDoorClosed));
+}
+
+MotionSensorAccessory.prototype.getLastActivation = function(callback) {
+    callback(null, this.lastActivation);
+}
+
+MotionSensorAccessory.prototype.identify = function(callback) {
+    this.log("Identify: %s", this.name);
+    callback();
+}
+
+MotionSensorAccessory.prototype.setDefaults = function() {
+    this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(MotionSensorAccessory.encodeState(this.isDoorClosed));
+}
+
+MotionSensorAccessory.prototype.readInput = function(err) {
+  //this.log('worked');
+  if (err) {
+    this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+    throw err;
+  }
+  //var value = 2;
+  gpio.read(this.pin, this.processInput.bind(this));
+  //this.log('value = ' + value);
+}
+
+MotionSensorAccessory.prototype.processInput = function(err,value) {
+  if (err) {
+    this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+    throw err;
+  }
+  //this.log('OK');
+  this.log('value for ' + this.name + ' is ' + value);
+  this.setNewState(value);
+}
+
+MotionSensorAccessory.prototype.arp = function() {
+  //var newState = false;
+  //this.log('Been here.');
+  gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
+  //this.log('Done that.');
+  //this.log('newState = ' + newState);
+
+  setTimeout(MotionSensorAccessory.prototype.arp.bind(this), this.checkInterval);
+}
+
+MotionSensorAccessory.prototype.setNewState = function(newState) {
+    var oldState = this.isDoorClosed;
+    if (oldState != newState) {
+        this.isDoorClosed = newState;
+        this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(MotionSensorAccessory.encodeState(newState));
+
+        var now = moment().unix();
+        this.lastActivation = now - this.historyService.getInitialTime();
+
+        this.historyService.addEntry(
+            {
+                time: moment().unix(),
+                status: (newState) ? 0 : 1
+            });
+        this.log('Changed Contact sensor state for %s to %s.', this.name, newState);
+    }
+}
+
+MotionSensorAccessory.prototype.getServices = function() {
 
     var servicesList = [this.service];
 
