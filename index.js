@@ -861,7 +861,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  this.log('value for ' + this.name + ' is ' + value);
+  this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
     var newState = this.isActive();
@@ -880,10 +880,10 @@ MotionSensorAccessory.prototype.arp = function() {
 }
 
 MotionSensorAccessory.prototype.setNewState = function(newState) {
-    this.log('Arrived at setNewState');
+    //this.log('Arrived at setNewState');
     var oldState = this.stateCache;
-    this.log('oldState is ' + oldState);
-    this.log('newState is ' + newState);
+    //this.log('oldState is ' + oldState);
+    //this.log('newState is ' + newState);
     if (oldState != newState) {
         this.stateCache = newState;
         this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
