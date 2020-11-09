@@ -705,9 +705,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.pin = config['pin'];
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
-    this.isDoorClosed = true;
-    this.timesOpened = 0;
-    this.lastActivation = 0;
+    this.stateCache = false;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -723,26 +721,14 @@ function MotionSensorAccessory(log, config, platform) {
         }
     }
 
-    class TimesOpenedCharacteristic extends Characteristic {
+    class SensitivityCharacteristic extends Characteristic {
         constructor(accessory) {
-            super('TimesOpened', 'E863F129-079E-48FF-8F27-9C2605A29F52');
+            super('Sensitivity', 'E863F120-079E-48FF-8F27-9C2605A29F52');
             this.setProps({
-                format: Characteristic.Formats.UINT32,
-                unit: Characteristic.Units.SECONDS,
-                perms: [
-                    Characteristic.Perms.READ,
-                    Characteristic.Perms.NOTIFY
-                ]
-            });
-        }
-    }
-
-    class ResetTotalCharacteristic extends Characteristic {
-        constructor(accessory) {
-            super('ResetTotal', 'E863F112-079E-48FF-8F27-9C2605A29F52');
-            this.setProps({
-                format: Characteristic.Formats.UINT32,
-                unit: Characteristic.Units.SECONDS,
+                format: Characteristic.Formats.UINT8,
+                minValue: 0,
+                maxValue: 7,
+                validValues: [0, 4, 7],
                 perms: [
                     Characteristic.Perms.READ,
                     Characteristic.Perms.NOTIFY,
@@ -752,12 +738,19 @@ function MotionSensorAccessory(log, config, platform) {
         }
     }
 
-    class Char118Characteristic extends Characteristic {
+    class DurationCharacteristic extends Characteristic {
         constructor(accessory) {
-            super('Char118', 'E863F118-079E-48FF-8F27-9C2605A29F52');
+            super('Duration', 'E863F12D-079E-48FF-8F27-9C2605A29F52');
             this.setProps({
-                format: Characteristic.Formats.UINT32,
+                format: Characteristic.Formats.UINT16,
                 unit: Characteristic.Units.SECONDS,
+                minValue: 5,
+                maxValue: 15 * 3600,
+                validValues: [
+                    5, 10, 20, 30,
+                    1 * 60, 2 * 60, 3 * 60, 5 * 60, 10 * 60, 20 * 60, 30 * 60,
+                    1 * 3600, 2 * 3600, 3 * 3600, 5 * 3600, 10 * 3600, 12 * 3600, 15 * 3600
+                ],
                 perms: [
                     Characteristic.Perms.READ,
                     Characteristic.Perms.NOTIFY,
@@ -767,82 +760,87 @@ function MotionSensorAccessory(log, config, platform) {
         }
     }
 
-    class Char119Characteristic extends Characteristic {
-        constructor(accessory) {
-            super('Char119', 'E863F119-079E-48FF-8F27-9C2605A29F52');
-            this.setProps({
-                format: Characteristic.Formats.UINT32,
-                unit: Characteristic.Units.SECONDS,
-                perms: [
-                    Characteristic.Perms.READ,
-                    Characteristic.Perms.NOTIFY,
-                    Characteristic.Perms.WRITE
-                ]
-            });
-        }
-    }
-
-    this.service = new Service.ContactSensor(this.name);
+    this.service = new Service.MotionSensor(this.name);
     this.service
-        .getCharacteristic(Characteristic.ContactSensorState)
-        .on('get', this.getState.bind(this));
+    .getCharacteristic(Characteristic.MotionDetected)
+    .on('get', this.getState.bind(this));
 
     this.service.addCharacteristic(LastActivationCharacteristic);
     this.service
-        .getCharacteristic(LastActivationCharacteristic)
-        .on('get', this.getLastActivation.bind(this));
+    .getCharacteristic(LastActivationCharacteristic)
+    .on('get', this.getLastActivation.bind(this));
 
-    this.service.addOptionalCharacteristic(TimesOpenedCharacteristic);
-    this.service.addCharacteristic(Char118Characteristic);
-    this.service.addCharacteristic(Char119Characteristic);
+    this.service.addCharacteristic(SensitivityCharacteristic);
+    this.service
+    .getCharacteristic(SensitivityCharacteristic)
+    .on('get', function(callback){
+      callback(null, 4);
+    }.bind(this));
+
+    this.service.addCharacteristic(DurationCharacteristic);
+    this.service
+    .getCharacteristic(DurationCharacteristic)
+    .on('get', function(callback){
+      callback(null, 5);
+    }.bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
-        .setCharacteristic(Characteristic.Name, this.name)
-        .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
-        .setCharacteristic(Characteristic.Manufacturer, "Elgato");
+    .setCharacteristic(Characteristic.Name, this.name)
+    .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
+    .setCharacteristic(Characteristic.Manufacturer, "Elgato");
 
-    this.historyService = new FakeGatoHistoryService("door", {
-            displayName: this.name,
-            log: this.log
-        },
-        {
-            storage: 'fs',
-            disableTimer: true,
-            path: HomebridgeAPI.user.storagePath() + '/accessories',
-            filename: 'history_' + "hps-" + this.name.toLowerCase() + '.json'
-        });
+    this.historyService = new FakeGatoHistoryService("motion", {
+      displayName: this.name,
+      log: this.log
+    },
+    {
+      storage: 'fs',
+      disableTimer: true
+    });
 
-    this.historyService.addCharacteristic(ResetTotalCharacteristic);
-
-    this.setDefaults();
+    this.initStateCache();
 
     this.arp();
 }
 
 MotionSensorAccessory.encodeState = function(state) {
-    if (state) {
-        return Characteristic.ContactSensorState.CONTACT_DETECTED;
-    } else {
-        return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
-    }
+    if (state)
+        return Characteristic.OccupancyDetected.OCCUPANCY_DETECTED;
+    else
+        return Characteristic.OccupancyDetected.OCCUPANCY_NOT_DETECTED;
 }
 
 MotionSensorAccessory.prototype.getState = function(callback) {
-    callback(null, MotionSensorAccessory.encodeState(this.isDoorClosed));
+    callback(null, PeopleAccessory.encodeState(this.stateCache));
 }
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
-    callback(null, this.lastActivation);
+    var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+    if (lastSeenUnix) {
+        var lastSeenMoment = moment(lastSeenUnix).unix();
+        callback(null, lastSeenMoment - this.historyService.getInitialTime());
+    }
 }
 
 MotionSensorAccessory.prototype.identify = function(callback) {
-    this.log("Identify: %s", this.name);
+    this.log("Identify: "+this.name);
     callback();
 }
 
-MotionSensorAccessory.prototype.setDefaults = function() {
-    this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(MotionSensorAccessory.encodeState(this.isDoorClosed));
+MotionSensorAccessory.prototype.initStateCache = function() {
+    var isActive = this.isActive();
+    this.stateCache = isActive;
+}
+
+MotionSensorAccessory.prototype.isActive = function() {
+    var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+    if (lastSeenUnix) {
+        var lastSeenMoment = moment(lastSeenUnix);
+        var activeThreshold = moment().subtract(this.threshold, 'm');
+        return lastSeenMoment.isAfter(activeThreshold);
+    }
+    return false;
 }
 
 MotionSensorAccessory.prototype.readInput = function(err) {
@@ -863,7 +861,11 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   }
   //this.log('OK');
   this.log('value for ' + this.name + ' is ' + value);
-  this.setNewState(value);
+  if (value) {
+    this.platform.storage.setItemSync('lastSuccessfulPing_' + this.target, Date.now());
+    var newState = this.isActive();
+    this.setNewState(newState);
+  }
 }
 
 MotionSensorAccessory.prototype.arp = function() {
@@ -877,10 +879,18 @@ MotionSensorAccessory.prototype.arp = function() {
 }
 
 MotionSensorAccessory.prototype.setNewState = function(newState) {
-    var oldState = this.isDoorClosed;
+    var oldState = this.stateCache;
     if (oldState != newState) {
-        this.isDoorClosed = newState;
-        this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(MotionSensorAccessory.encodeState(newState));
+        this.stateCache = newState;
+        this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+
+        if(this.platform.peopleAnyOneAccessory) {
+            this.platform.peopleAnyOneAccessory.refreshState();
+        }
+
+        if(this.platform.peopleNoOneAccessory) {
+            this.platform.peopleNoOneAccessory.refreshState();
+        }
 
         var now = moment().unix();
         this.lastActivation = now - this.historyService.getInitialTime();
@@ -890,7 +900,7 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
                 time: moment().unix(),
                 status: (newState) ? 0 : 1
             });
-        this.log('Changed Contact sensor state for %s to %s.', this.name, newState);
+        this.log('Changed motion sensor state for %s to %s.', this.name, newState);
     }
 }
 
