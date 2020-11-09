@@ -649,7 +649,7 @@ ContactSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  this.log('value for ' + this.name + ' is ' + value);
+  //this.log('value for ' + this.name + ' is ' + value);
   this.setNewState(value);
 }
 
@@ -863,6 +863,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   //this.log('OK');
   this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
+    this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
     var newState = this.isActive();
     this.setNewState(newState);
