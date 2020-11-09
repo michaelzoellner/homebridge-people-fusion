@@ -846,7 +846,7 @@ MotionSensorAccessory.prototype.isActive = function() {
         //this.log('activeThreshold is ' + activeThreshold);
         var result = lastSeenMoment.isAfter(activeThreshold);
         this.log('result is ' + result);
-        return
+        return result;
     }
     return false;
 }
