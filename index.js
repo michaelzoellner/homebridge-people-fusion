@@ -836,14 +836,17 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
+    this.log('isActive called.');
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
-    this.log('lastSeenUnix is ' + lastSeenUnix);
+
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
-        this.log('lastSeenMoment is ' + lastSeenMoment);
+        //this.log('lastSeenMoment is ' + lastSeenMoment);
         var activeThreshold = moment().subtract(this.threshold, 'm');
-        this.log('activeThreshold is ' + activeThreshold);
-        return lastSeenMoment.isAfter(activeThreshold);
+        //this.log('activeThreshold is ' + activeThreshold);
+        var result = lastSeenMoment.isAfter(activeThreshold);
+        this.log('result is ' + result);
+        return
     }
     return false;
 }
