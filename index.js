@@ -706,6 +706,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
+    this.threshold = config['threshold'] || 1;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
