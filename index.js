@@ -701,7 +701,7 @@ ContactSensorAccessory.prototype.getServices = function() {
 
 function MotionSensorAccessory(log, config, platform) {
     this.log = log;
-    this.name = config['name'] + ' ' + config['type'];
+    this.name = config['name'];
     this.pin = config['pin'];
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
@@ -816,7 +816,7 @@ MotionSensorAccessory.prototype.getState = function(callback) {
 }
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
-    var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
@@ -834,7 +834,7 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
-    var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
         var activeThreshold = moment().subtract(this.threshold, 'm');
@@ -862,7 +862,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   //this.log('OK');
   this.log('value for ' + this.name + ' is ' + value);
   if (value) {
-    this.platform.storage.setItemSync('lastSuccessfulPing_' + this.target, Date.now());
+    this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
     var newState = this.isActive();
     this.setNewState(newState);
   }
@@ -879,6 +879,7 @@ MotionSensorAccessory.prototype.arp = function() {
 }
 
 MotionSensorAccessory.prototype.setNewState = function(newState) {
+    this.log('Arrived at setNewState');
     var oldState = this.stateCache;
     if (oldState != newState) {
         this.stateCache = newState;
