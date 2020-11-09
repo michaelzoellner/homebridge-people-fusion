@@ -74,8 +74,7 @@ PeoplePlatform.prototype = {
               var sensorAccessory = new MotionSensorAccessory(this.log, this.sensors[i], this);
               this.accessories.push(sensorAccessory);
             break;
-          })
-
+          }
         }
         callback(this.accessories);
 
