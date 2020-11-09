@@ -868,7 +868,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  //this.log('Read value for ' + this.name + ' is ' + value);
+  this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     //this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
@@ -880,7 +880,9 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
 MotionSensorAccessory.prototype.arp = function() {
   //var newState = false;
   //this.log('Been here.');
-  gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
+  try {
+    gpio.setup(this.pin, gpio.DIR_IN, this.readInput.bind(this));
+  }
   //this.log('Done that.');
   //this.log('newState = ' + newState);
 
