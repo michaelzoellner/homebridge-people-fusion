@@ -432,7 +432,7 @@ function PeopleAllAccessory(log, name, platform) {
     this.name = name;
     this.platform = platform;
 
-    this.service = new Service.MotionSensor(this.name);
+    this.service = new Service.OccupancySensor(this.name);
     this.service
         .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
