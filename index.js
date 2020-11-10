@@ -244,7 +244,7 @@ function PeopleAccessory(log, config, platform) {
         }
     }
 
-    this.service = new Service.MotionSensor(this.name);
+    this.service = new Service.OccupancySensor(this.name);
     this.service
         .getCharacteristic(Characteristic.MotionDetected)
         .on('get', this.getState.bind(this));
@@ -815,7 +815,7 @@ function MotionSensorAccessory(log, config, platform) {
     .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
     .setCharacteristic(Characteristic.Manufacturer, "Elgato");
 
-    this.historyService = new ("motion", {
+    this.historyService = new FakeGatoHistoryService("motion", {
       displayName: this.name,
       log: this.log
     },
