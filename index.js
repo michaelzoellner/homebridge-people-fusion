@@ -560,6 +560,21 @@ function ContactSensorAccessory(log, config, platform) {
         }
     }
 
+    class BatteryLevelCharacteristic extends Characteristic {
+      constructor(accessory) {
+        super('BatteryLevel', 'E863F11B-079E-48FF-8F27-9C2605A29F52');
+        this.setProps({
+          format: Characteristic.Formats.UINT16,
+          unit: Characteristic.Units.PERCENTAGE,
+          perms: [
+            Characteristic.Perms.READ,
+            Characteristic.Perms.NOTIFY
+          ]
+
+        });
+      }
+    }
+
     class ResetTotalCharacteristic extends Characteristic {
         constructor(accessory) {
             super('ResetTotal', 'E863F112-079E-48FF-8F27-9C2605A29F52');
@@ -615,10 +630,15 @@ function ContactSensorAccessory(log, config, platform) {
         .getCharacteristic(LastActivationCharacteristic)
         .on('get', this.getLastActivation.bind(this));
 
-    this.service.addOptionalCharacteristic(TimesOpenedCharacteristic);
+    this.service.addCharacteristic(TimesOpenedCharacteristic);
     this.service
         .getCharacteristic(TimesOpenedCharacteristic)
         .on('get',this.getTimesOpened.bind(this));
+
+    this.service.addCharacteristic(BatteryLevelCharacteristic);
+    this.service
+        .getCharacteristic(BatteryLevelCharacteristic)
+        .on('get',this.getBatteryLevel.bind(this));
 
     this.service.addCharacteristic(Char118Characteristic);
     this.service.addCharacteristic(Char119Characteristic);
@@ -651,6 +671,10 @@ ContactSensorAccessory.encodeState = function(state) {
     } else {
         return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
     }
+}
+
+ContactSensorAccessory.prototype.getBatteryLevel = function(callback) {
+    callback(null, uint16(100));
 }
 
 ContactSensorAccessory.prototype.getState = function(callback) {
