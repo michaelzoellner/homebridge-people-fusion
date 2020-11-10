@@ -269,6 +269,12 @@ function PeopleAccessory(log, config, platform) {
             callback(null, 5);
         }.bind(this));
 
+    this.motionService = new Service.MotionSensor(this.name);
+    this.motionService
+        .getCharacteristic(Characteristic.MotionDetected)
+        .on('get', this.getState.bind(this));
+
+
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
         .setCharacteristic(Characteristic.Name, this.name)
