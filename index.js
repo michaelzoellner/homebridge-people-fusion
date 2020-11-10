@@ -616,6 +616,10 @@ function ContactSensorAccessory(log, config, platform) {
         .on('get', this.getLastActivation.bind(this));
 
     this.service.addOptionalCharacteristic(TimesOpenedCharacteristic);
+    this.service
+        .getCharacteristic(TimesOpenedCharacteristic)
+        .on('get',this.getTimesOpened.bind(this));
+
     this.service.addCharacteristic(Char118Characteristic);
     this.service.addCharacteristic(Char119Characteristic);
 
@@ -655,6 +659,10 @@ ContactSensorAccessory.prototype.getState = function(callback) {
 
 ContactSensorAccessory.prototype.getLastActivation = function(callback) {
     callback(null, this.lastActivation);
+}
+
+ContactSensorAccessory.prototype.getTimesOpened = function(callback) {
+    callback(null, this.timesOpened);
 }
 
 ContactSensorAccessory.prototype.identify = function(callback) {
@@ -707,6 +715,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         this.lastActivation = now - this.historyService.getInitialTime();
 
         if (newState) {
+          this.timesOpened += 1;
           this.historyService.addEntry(
             {
               time: moment().unix(),
