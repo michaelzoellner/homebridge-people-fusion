@@ -674,7 +674,7 @@ ContactSensorAccessory.encodeState = function(state) {
 }
 
 ContactSensorAccessory.prototype.getBatteryLevel = function(callback) {
-    callback(null, uint16(100));
+    callback(null, 100);
 }
 
 ContactSensorAccessory.prototype.getState = function(callback) {
