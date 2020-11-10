@@ -449,7 +449,7 @@ function PeopleAllAccessory(log, name, platform) {
         },
         {
             storage: 'fs',
-            disableTimer: true
+            disableTimer: false
         });
 }
 
@@ -463,19 +463,19 @@ PeopleAllAccessory.prototype.identify = function(callback) {
 }
 
 PeopleAllAccessory.prototype.getStateFromCache = function() {
-    var isAnyoneActive = this.getAnyoneStateFromCache();
-    if(this.name === SENSOR_NOONE) {
+  var isAnyoneActive = this.getAnyoneStateFromCache();
+  if(this.name === SENSOR_NOONE) {
+      return !isAnyoneActive;
+    }
+    else {
       this.historyService.addEntry(
         {
           time: moment().unix(),
           status: (isAnyoneActive) ? 1 : 0
         });
-        return !isAnyoneActive;
-      }
-      else {
-        return isAnyoneActive;
+      return isAnyoneActive;
     }
-}
+  }
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
@@ -621,7 +621,7 @@ function ContactSensorAccessory(log, config, platform) {
         },
         {
             storage: 'fs',
-            disableTimer: true
+            disableTimer: false
         });
 
     this.historyService.addCharacteristic(ResetTotalCharacteristic);
