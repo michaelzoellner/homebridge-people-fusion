@@ -391,6 +391,9 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         if (!newState) {
           this.log('setNewState for %s to false', this.name);
+          this.log('lastSuccessfulPing = ' + this.lastSuccessfulPing);
+          this.log('platform.doorSensor.lastActivation = ' + this.platform.doorSensor.lastActivation);
+          this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (this.lastSuccessfulPing > (this.platform.doorSensor.lastActivation + this.platform.wifiLeaveThreshold)) {
             this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
