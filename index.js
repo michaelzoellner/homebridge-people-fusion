@@ -669,12 +669,12 @@ function ContactSensorAccessory(log, config, platform) {
     this.service.addCharacteristic(OpenDurationCharacteristic);
     this.service
       .getCharacteristic(OpenDurationCharacteristic)
-      .on('get', this.this.getOpenDuration.bind(this))
+      .on('get', this.getOpenDuration.bind(this))
 
     this.service.addCharacteristic(ClosedDurationCharacteristic);
     this.service
       .getCharacteristic(ClosedDurationCharacteristic)
-      .on('get', this.this.getClosedDuration.bind(this))
+      .on('get', this.getClosedDuration.bind(this))
 
     this.setDefaults();
 
