@@ -815,13 +815,13 @@ function MotionSensorAccessory(log, config, platform) {
     .setCharacteristic(Characteristic.SerialNumber, "hps-"+this.name.toLowerCase())
     .setCharacteristic(Characteristic.Manufacturer, "Elgato");
 
-    this.historyService = new FakeGatoHistoryService("motion", {
+    this.historyService = new ("motion", {
       displayName: this.name,
       log: this.log
     },
     {
       storage: 'fs',
-      disableTimer: true
+      disableTimer: false
     });
 
     this.initStateCache();
@@ -859,7 +859,7 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
-    this.log('isActive called.');
+    //this.log('isActive called.');
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
 
     if (lastSeenUnix) {
@@ -868,7 +868,7 @@ MotionSensorAccessory.prototype.isActive = function() {
         var activeThreshold = moment().subtract(this.threshold, 'm');
         //this.log('activeThreshold is ' + activeThreshold);
         var result = lastSeenMoment.isAfter(activeThreshold);
-        this.log('result is ' + result);
+        //this.log('result is ' + result);
         return result;
     }
     return false;
@@ -891,7 +891,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     throw err;
   }
   //this.log('OK');
-  this.log('Read value for ' + this.name + ' is ' + value);
+  //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     //this.log('Setting lastMotion for ' + this.name);
     this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
