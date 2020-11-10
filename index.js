@@ -710,14 +710,14 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
           this.historyService.addEntry(
             {
               time: moment().unix(),
-              status: 1
+              status: 0
             }
           );
         } else {
           this.historyService.addEntry(
             {
               time: moment().unix(),
-              status: 0
+              status: 1
             }
           );
         }
