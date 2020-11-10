@@ -531,6 +531,11 @@ function ContactSensorAccessory(log, config, platform) {
     this.isDoorClosed = true;
     this.timesOpened = 0;
     this.lastActivation = 0;
+    this.lastResetReference = 978285600;
+    this.lastReset = moment().unix() - this.lastResetReference;
+    this.lastChange = moment().unix();
+    this.closedDuration = 0;
+    this.openDuration = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -590,7 +595,7 @@ function ContactSensorAccessory(log, config, platform) {
         }
     }
 
-    class Char118Characteristic extends Characteristic {
+    class OpenDurationCharacteristic extends Characteristic {
         constructor(accessory) {
             super('Char118', 'E863F118-079E-48FF-8F27-9C2605A29F52');
             this.setProps({
@@ -605,7 +610,7 @@ function ContactSensorAccessory(log, config, platform) {
         }
     }
 
-    class Char119Characteristic extends Characteristic {
+    class ClosedDurationCharacteristic extends Characteristic {
         constructor(accessory) {
             super('Char119', 'E863F119-079E-48FF-8F27-9C2605A29F52');
             this.setProps({
@@ -640,7 +645,6 @@ function ContactSensorAccessory(log, config, platform) {
         .getCharacteristic(BatteryLevelCharacteristic)
         .on('get',this.getBatteryLevel.bind(this));
 
-
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
         .setCharacteristic(Characteristic.Name, this.name)
@@ -657,9 +661,20 @@ function ContactSensorAccessory(log, config, platform) {
         });
 
     this.historyService.addCharacteristic(ResetTotalCharacteristic);
-    this.historyService.addCharacteristic(Char118Characteristic);
-    this.historyService.addCharacteristic(Char119Characteristic);
+    this.historyService
+      .getCharacteristic(ResetTotalCharacteristic)
+      .on('get', this.this.getEveResetTotal.bind(this))
+      .on('set', this.this.setEveResetTotal.bind(this))
 
+    this.service.addCharacteristic(OpenDurationCharacteristic);
+    this.service
+      .getCharacteristic(OpenDurationCharacteristic)
+      .on('get', this.this.getOpenDuration.bind(this))
+
+    this.service.addCharacteristic(ClosedDurationCharacteristic);
+    this.service
+      .getCharacteristic(ClosedDurationCharacteristic)
+      .on('get', this.this.getClosedDuration.bind(this))
 
     this.setDefaults();
 
@@ -673,6 +688,30 @@ ContactSensorAccessory.encodeState = function(state) {
         return Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
     }
 }
+
+ContactSensorAccessory.prototype.getOpenDuration = function(callback) {
+    callback(null, this.openDuration);
+}
+
+ContactSensorAccessory.prototype.getClosedDuration = function(callback) {
+    callback(null, this.closedDuration);
+}
+
+ContactSensorAccessory.prototype.getEveResetTotal = function(callback) {
+    callback(null, this.lastReset);
+}
+
+ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
+  this.doorExtra.timesOpened = 0;
+  this.openDuration = 0;
+  this.closeDuration = 0;
+  this.doorExtra.lastReset = moment().unix() - this.lastResetReference;
+  this.doorHistory.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
+  callback(null);
+}
+
+
+
 
 ContactSensorAccessory.prototype.getBatteryLevel = function(callback) {
     callback(null, 100);
@@ -733,6 +772,7 @@ ContactSensorAccessory.prototype.arp = function() {
 ContactSensorAccessory.prototype.setNewState = function(newState) {
     var oldState = this.isDoorClosed;
     if (oldState != newState) {
+        var delta = moment().unix() - this.lastChange;
         this.isDoorClosed = newState;
         this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(ContactSensorAccessory.encodeState(newState));
 
@@ -740,6 +780,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         this.lastActivation = now - this.historyService.getInitialTime();
 
         if (newState) {
+          this.openDuration += delta;
           this.timesOpened += 1;
           this.historyService.addEntry(
             {
@@ -748,6 +789,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         } else {
+          this.closeDuration += delta;
           this.historyService.addEntry(
             {
               time: moment().unix(),
