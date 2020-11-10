@@ -696,11 +696,22 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         var now = moment().unix();
         this.lastActivation = now - this.historyService.getInitialTime();
 
-        this.historyService.addEntry(
+        if (newState) {
+          this.historyService.addEntry(
             {
-                time: moment().unix(),
-                status: (newState) ? 0 : 1
-            });
+              time: moment().unix(),
+              status: 1
+            }
+          );
+        } else {
+          this.historyService.addEntry(
+            {
+              time: moment().unix(),
+              status: 0
+            }
+          );
+        }
+
         this.log('Changed Contact sensor state for %s to %s.', this.name, newState);
     }
 }
