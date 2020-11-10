@@ -465,9 +465,14 @@ PeopleAllAccessory.prototype.identify = function(callback) {
 PeopleAllAccessory.prototype.getStateFromCache = function() {
     var isAnyoneActive = this.getAnyoneStateFromCache();
     if(this.name === SENSOR_NOONE) {
+      this.historyService.addEntry(
+        {
+          time: moment().unix(),
+          status: (isAnyoneActive) ? 1 : 0
+        });
         return !isAnyoneActive;
-    }
-    else {
+      }
+      else {
         return isAnyoneActive;
     }
 }
