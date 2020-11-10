@@ -418,6 +418,10 @@ PeopleAccessory.prototype.getServices = function() {
 
     var servicesList = [this.service];
 
+    if(this.motionService) {
+      servicesList.push(this.motionService)
+    }
+
     if(this.historyService) {
         servicesList.push(this.historyService)
     }
