@@ -442,6 +442,15 @@ function PeopleAllAccessory(log, name, platform) {
         .setCharacteristic(Characteristic.Name, this.name)
         .setCharacteristic(Characteristic.SerialNumber, (this.name === SENSOR_NOONE)?"hps-noone":"hps-all")
         .setCharacteristic(Characteristic.Manufacturer, "Elgato");
+
+    this.historyService = new FakeGatoHistoryService("motion", {
+            displayName: this.name,
+            log: this.log
+        },
+        {
+            storage: 'fs',
+            disableTimer: true
+        });
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
@@ -479,7 +488,18 @@ PeopleAllAccessory.prototype.refreshState = function() {
 }
 
 PeopleAllAccessory.prototype.getServices = function() {
-    return [this.service, this.accessoryService];
+
+    var servicesList = [this.service];
+
+    if(this.historyService) {
+        servicesList.push(this.historyService)
+    }
+    if(this.accessoryService) {
+        servicesList.push(this.accessoryService)
+    }
+
+    return servicesList;
+
 }
 
 // #######################
