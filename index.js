@@ -391,10 +391,11 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         if (!newState) {
           this.log('setNewState for %s to false', this.name);
-          this.log('lastSuccessfulPing = ' + this.lastSuccessfulPing);
+          var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+          this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
           this.log('platform.doorSensor.lastActivation = ' + this.platform.doorSensor.lastActivation);
           this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
-          if (this.lastSuccessfulPing > (this.platform.doorSensor.lastActivation + this.platform.wifiLeaveThreshold)) {
+          if (lastSuccessfulPing > (this.platform.doorSensor.lastActivation + this.platform.wifiLeaveThreshold)) {
             this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
           }
@@ -413,7 +414,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         var lastSuccessfulPingMoment = "none";
         var lastWebhookMoment = "none";
-        var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+        lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
         if(lastSuccessfulPing) {
             lastSuccessfulPingMoment = moment(lastSuccessfulPing).format();
         }
