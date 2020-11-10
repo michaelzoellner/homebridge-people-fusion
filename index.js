@@ -31,19 +31,22 @@ module.exports = function(homebridge) {
 
 function PeoplePlatform(log, config){
     this.log = log;
-    this.threshold = config['threshold'] || 15;
+    this.threshold = config['threshold'] || 5;
     this.anyoneSensor = ((typeof(config['anyoneSensor']) != "undefined" && config['anyoneSensor'] !== null)?config['anyoneSensor']:true);
     this.nooneSensor = ((typeof(config['nooneSensor']) != "undefined" && config['nooneSensor'] !== null)?config['nooneSensor']:true);
     this.webhookPort = config["webhookPort"] || 51828;
     this.cacheDirectory = config["cacheDirectory"] || HomebridgeAPI.user.persistPath();
     this.pingInterval = config["pingInterval"] || 10000;
     this.ignoreReEnterExitSeconds = config["ignoreReEnterExitSeconds"] || 0;
+    this.wifiLeaveThreshold = config["wifiLeaveThreshold"] || 120;
+    this.motionAfterDoorCloseIgnore = config["motionAfterDoorCloseIgnore"] || 5;
     this.people = config['people'];
     this.sensors = config['sensors'];
     this.storage = require('node-persist');
     this.storage.initSync({dir:this.cacheDirectory});
     this.webhookQueue = [];
-
+    this.doorSensor = [];
+    this.motionSensor = [];
 }
 
 PeoplePlatform.prototype = {
@@ -68,10 +71,12 @@ PeoplePlatform.prototype = {
           switch (this.sensors[i]['type']) {
             case 'contact':
               var sensorAccessory = new ContactSensorAccessory(this.log, this.sensors[i], this);
+              this.doorSensor = sensorAccessory;
               this.accessories.push(sensorAccessory);
             break;
             case 'motion':
               var sensorAccessory = new MotionSensorAccessory(this.log, this.sensors[i], this);
+              this.motionSensor = sensorAccessory;
               this.accessories.push(sensorAccessory);
             break;
           }
@@ -383,6 +388,15 @@ PeopleAccessory.prototype.successfulPingOccurredAfterWebhook = function() {
 PeopleAccessory.prototype.setNewState = function(newState) {
     var oldState = this.stateCache;
     if (oldState != newState) {
+
+        if (!newState)
+          this.log('setNewState for %s to false', this.name);
+          if (this.lastSuccessfulPing > (this.platform.doorSensor.lastActivation + this.platform.wifiLeaveThreshold)) {
+            this.log('is denied because lastPing was later than lastDoorOpen + threshold');
+            return(null);
+          }
+        }
+
         this.stateCache = newState;
         this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
 
