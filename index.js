@@ -246,7 +246,7 @@ function PeopleAccessory(log, config, platform) {
 
     this.service = new Service.OccupancySensor(this.name);
     this.service
-        .getCharacteristic(Characteristic.MotionDetected)
+        .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
 
     this.service.addCharacteristic(LastActivationCharacteristic);
