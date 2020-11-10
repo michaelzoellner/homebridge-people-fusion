@@ -640,8 +640,6 @@ function ContactSensorAccessory(log, config, platform) {
         .getCharacteristic(BatteryLevelCharacteristic)
         .on('get',this.getBatteryLevel.bind(this));
 
-    this.service.addCharacteristic(Char118Characteristic);
-    this.service.addCharacteristic(Char119Characteristic);
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
@@ -659,6 +657,9 @@ function ContactSensorAccessory(log, config, platform) {
         });
 
     this.historyService.addCharacteristic(ResetTotalCharacteristic);
+    this.historyService.addCharacteristic(Char118Characteristic);
+    this.historyService.addCharacteristic(Char119Characteristic);
+
 
     this.setDefaults();
 
