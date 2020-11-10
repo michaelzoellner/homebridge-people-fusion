@@ -663,8 +663,8 @@ function ContactSensorAccessory(log, config, platform) {
     this.historyService.addCharacteristic(ResetTotalCharacteristic);
     this.historyService
       .getCharacteristic(ResetTotalCharacteristic)
-      .on('get', this.this.getEveResetTotal.bind(this))
-      .on('set', this.this.setEveResetTotal.bind(this))
+      .on('get', this.getEveResetTotal.bind(this))
+      .on('set', this.setEveResetTotal.bind(this))
 
     this.service.addCharacteristic(OpenDurationCharacteristic);
     this.service
