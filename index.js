@@ -393,7 +393,8 @@ PeopleAccessory.prototype.setNewState = function(newState) {
           this.log('setNewState for %s to false', this.name);
           var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
           this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
-          this.log('platform.doorSensor.lastActivation = ' + this.platform.doorSensor.lastActivation);
+          var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+          this.log('lastDoorActivation = ' + lastDoorActivation);
           this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (this.platform.doorSensor.lastActivation + this.platform.wifiLeaveThreshold)) {
             this.log('is denied because lastPing was later than lastDoorOpen + threshold');
