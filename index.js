@@ -390,14 +390,15 @@ PeopleAccessory.prototype.setNewState = function(newState) {
     if (oldState != newState) {
 
         if (!newState) {
-          this.log('setNewState for %s to false', this.name);
+          //this.log('setNewState for %s to false', this.name);
           var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
-          this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
+          //this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
           var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
-          this.log('lastDoorActivation = ' + lastDoorActivation);
-          this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
+          //this.log('lastDoorActivation = ' + lastDoorActivation);
+          //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
-            this.log('is denied because lastPing was later than lastDoorOpen + threshold');
+            this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPingMoment, lastDoorActivation, this.platform.wifiLeaveThreshold);
+            //this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
           }
         }
