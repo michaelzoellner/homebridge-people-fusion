@@ -391,7 +391,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         if (!newState) {
           this.log('setNewState for %s to false', this.name);
-          var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
+          var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
           this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
           var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
           this.log('lastDoorActivation = ' + lastDoorActivation);
