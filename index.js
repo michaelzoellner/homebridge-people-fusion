@@ -463,16 +463,42 @@ function PeopleAllAccessory(log, name, platform) {
     this.log = log;
     this.name = name;
     this.platform = platform;
+    this.state = 0;
 
     this.service = new Service.OccupancySensor(this.name);
     this.service
         .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
 
+    this.service.addCharacteristic(LastActivationCharacteristic);
+    this.service
+        .getCharacteristic(LastActivationCharacteristic)
+        .on('get', this.getLastActivation.bind(this));
+
+
+    this.service.addCharacteristic(SensitivityCharacteristic);
+    this.service
+        .getCharacteristic(SensitivityCharacteristic)
+        .on('get', function(callback){
+            callback(null, 4);
+        }.bind(this));
+
+    this.service.addCharacteristic(DurationCharacteristic);
+    this.service
+        .getCharacteristic(DurationCharacteristic)
+        .on('get', function(callback){
+            callback(null, 5);
+        }.bind(this));
+
+    this.motionService = new Service.MotionSensor(this.name);
+    this.motionService
+        .getCharacteristic(Characteristic.MotionDetected)
+        .on('get', this.getState.bind(this));
+
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
         .setCharacteristic(Characteristic.Name, this.name)
-        .setCharacteristic(Characteristic.SerialNumber, (this.name === SENSOR_INTRUDOR)?"hps-noone":"hps-all")
+        .setCharacteristic(Characteristic.SerialNumber, (this.name === SENSOR_INTRUDOR)?"hps-intrudor":"hps-anyone")
         .setCharacteristic(Characteristic.Manufacturer, "Elgato");
 
     this.historyService = new FakeGatoHistoryService("motion", {
@@ -494,47 +520,66 @@ PeopleAllAccessory.prototype.identify = function(callback) {
     callback();
 }
 
+PeopleAllAccessory.prototype.getLastActivation = function(callback) {
+    var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.name);
+    if (lastSeenUnix) {
+        var lastSeenMoment = moment(lastSeenUnix).unix();
+        callback(null, lastSeenMoment - this.historyService.getInitialTime());
+    }
+}
+
 PeopleAllAccessory.prototype.getStateFromCache = function() {
   var isAnyoneActive = this.getAnyoneStateFromCache();
 
   if(this.name === SENSOR_INTRUDOR) {
     if (isAnyoneActive) {
-      if ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin)) {
+      var newState = ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin));
+      if (newState != this.state) {
+        this.state = newState;
+        if (newState) {
+          this.historyService.addEntry(
+            {
+              time: moment().unix(),
+              status: 1
+            }
+          );
+          this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
+          return true;
+        } else {
+          this.historyService.addEntry(
+            {
+              time: moment().unix(),
+              status: 0
+            }
+          );
+          return false;
+        }
+      }
+    }
+  }
+
+  if(this.name === SENSOR_ANYONE) {
+    if (this.state != isAnyoneActive) {
+      this.state = isAnyoneActive;
+      if (isAnyoneActive) {
         this.historyService.addEntry(
           {
             time: moment().unix(),
             status: 1
           }
         );
+        this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
         return true;
+      } else {
+        this.historyService.addEntry(
+          {
+            time: moment().unix(),
+            status: 0
+          }
+        );
+        return false;
       }
     }
-    this.historyService.addEntry(
-      {
-        time: moment().unix(),
-        status: 0
-      }
-    );
-    return false;
-  }
-
-  if(this.name === SENSOR_ANYONE) {
-    if (isAnyoneActive) {
-      this.historyService.addEntry(
-        {
-          time: moment().unix(),
-          status: 1
-        }
-      );
-    } else {
-      this.historyService.addEntry(
-        {
-          time: moment().unix(),
-          status: 0
-        }
-      );
-    }
-    return isAnyoneActive;
   }
 }
 
@@ -568,6 +613,10 @@ PeopleAllAccessory.prototype.refreshState = function() {
 PeopleAllAccessory.prototype.getServices = function() {
 
     var servicesList = [this.service];
+
+    if(this.motionService) {
+      servicesList.push(this.motionService)
+    }
 
     if(this.historyService) {
         servicesList.push(this.historyService)
