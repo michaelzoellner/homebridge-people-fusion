@@ -582,6 +582,7 @@ PeopleAllAccessory.prototype.getLastActivation = function(callback) {
 }
 
 PeopleAllAccessory.prototype.getStateFromCache = function() {
+  this.log('getStateFromCache for %s', this.name);
   var isAnyoneActive = this.getAnyoneStateFromCache();
 
   if(this.name === SENSOR_INTRUDOR) {
@@ -637,6 +638,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 }
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
+    this.log('getAnyoneStateFromCache');
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
         var isActive = peopleAccessory.stateCache;
