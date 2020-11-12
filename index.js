@@ -497,7 +497,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   var isAnyoneActive = this.getAnyoneStateFromCache();
 
   if(this.name === SENSOR_INTRUDOR) {
-    if isAnyoneActive {
+    if (isAnyoneActive) {
       if ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin)) {
         this.historyService.addEntry(
           {
@@ -518,7 +518,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   }
 
   if(this.name === SENSOR_ANYONE) {
-    if isAnyoneActive {
+    if (isAnyoneActive) {
       this.historyService.addEntry(
         {
           time: moment().unix(),
