@@ -653,7 +653,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     }
 
     var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
-    var lastMotionDetected = this.platform.MotionSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    var lastMotionDetected = this.platform.motionSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
     if (lastMotionDetected > lastDoorActivation + this.platform.motionAfterDoorCloseIgnore) {
       return true;
     }
