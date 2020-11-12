@@ -463,7 +463,7 @@ function PeopleAllAccessory(log, name, platform) {
     this.log = log;
     this.name = name;
     this.platform = platform;
-    this.state = 0;
+    this.state = false;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
