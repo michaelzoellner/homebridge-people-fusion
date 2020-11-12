@@ -406,6 +406,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         this.stateCache = newState;
         this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+        this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 
         if(this.platform.peopleAnyOneAccessory) {
             this.platform.peopleAnyOneAccessory.refreshState();
@@ -863,6 +864,14 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         }
 
         this.log('Changed Contact sensor state for %s to %s.', this.name, newState);
+
+        if(this.platform.peopleAnyOneAccessory) {
+            this.platform.peopleAnyOneAccessory.refreshState();
+        }
+
+        if(this.platform.peopleIntrudorAccessory) {
+            this.platform.peopleIntrudorAccessory.refreshState();
+        }
     }
 }
 
@@ -1112,7 +1121,16 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         }
+
         this.log('Changed motion sensor state for %s to %s.', this.name, newState);
+
+        if(this.platform.peopleAnyOneAccessory) {
+            this.platform.peopleAnyOneAccessory.refreshState();
+        }
+
+        if(this.platform.peopleIntrudorAccessory) {
+            this.platform.peopleIntrudorAccessory.refreshState();
+        }
     }
 }
 
