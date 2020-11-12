@@ -6,7 +6,7 @@ var url = require('url');
 var gpio = require('rpi-gpio');
 var DEFAULT_REQUEST_TIMEOUT = 10000;
 var SENSOR_ANYONE = 'Anyone';
-var SENSOR_INTRUDOR = 'No One';
+var SENSOR_INTRUDOR = 'Intrudor';
 var FakeGatoHistoryService;
 const EPOCH_OFFSET = 978307200;
 
