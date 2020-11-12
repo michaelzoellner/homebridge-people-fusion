@@ -589,6 +589,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   var isAnyoneActive = this.getAnyoneStateFromCache();
   this.log('isAnyoneActive is %s', isAnyoneActive);
   if(this.name === SENSOR_INTRUDOR) {
+    this.log('here');
     if (isAnyoneActive) {
       var newState = ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin));
       if (newState != this.state) {
@@ -627,7 +628,6 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
           }
         );
         this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
-        return true;
       } else {
         this.historyService.addEntry(
           {
@@ -635,9 +635,9 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
             status: 0
           }
         );
-        return false;
       }
     }
+    return isAnyoneActive;
   }
 }
 
