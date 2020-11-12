@@ -584,7 +584,7 @@ PeopleAllAccessory.prototype.getLastActivation = function(callback) {
 PeopleAllAccessory.prototype.getStateFromCache = function() {
   this.log('getStateFromCache for %s', this.name);
   var isAnyoneActive = this.getAnyoneStateFromCache();
-
+  this.log('isAnyoneActive is %s', isAnyoneActive);
   if(this.name === SENSOR_INTRUDOR) {
     if (isAnyoneActive) {
       var newState = ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin));
@@ -613,6 +613,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   }
 
   if(this.name === SENSOR_ANYONE) {
+    this.log('this state is %s', this.state);
     if (this.state != isAnyoneActive) {
       this.state = isAnyoneActive;
       if (isAnyoneActive) {
