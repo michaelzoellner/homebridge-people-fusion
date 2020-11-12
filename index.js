@@ -638,10 +638,11 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 }
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
-    this.log('getAnyoneStateFromCache');
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
+        this.log('getAnyoneStateFromCache for %s',peopleAccessory.name);
         var isActive = peopleAccessory.stateCache;
+        this.log('stateCache is %s',isActive);
         if(isActive) {
             this.platform.doorSensor.entryMoment = 0;
             return true;
