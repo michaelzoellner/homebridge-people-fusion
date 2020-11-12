@@ -602,7 +602,6 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
             }
           );
           this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
-          return true;
         } else {
           this.historyService.addEntry(
             {
@@ -610,9 +609,9 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
               status: 0
             }
           );
-          return false;
         }
       }
+      return this.state;
     }
   }
 
