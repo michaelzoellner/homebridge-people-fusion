@@ -6,7 +6,7 @@ var url = require('url');
 var gpio = require('rpi-gpio');
 var DEFAULT_REQUEST_TIMEOUT = 10000;
 var SENSOR_ANYONE = 'Anyone';
-var SENSOR_NOONE = 'No One';
+var SENSOR_INTRUDOR = 'No One';
 var FakeGatoHistoryService;
 const EPOCH_OFFSET = 978307200;
 
@@ -33,12 +33,13 @@ function PeoplePlatform(log, config){
     this.log = log;
     this.threshold = config['threshold'] || 5;
     this.anyoneSensor = ((typeof(config['anyoneSensor']) != "undefined" && config['anyoneSensor'] !== null)?config['anyoneSensor']:true);
-    this.nooneSensor = ((typeof(config['nooneSensor']) != "undefined" && config['nooneSensor'] !== null)?config['nooneSensor']:true);
+    this.intrudorSensor = ((typeof(config['intrudorSensor']) != "undefined" && config['intrudorSensor'] !== null)?config['intrudorSensor']:true);
     this.webhookPort = config["webhookPort"] || 51828;
     this.cacheDirectory = config["cacheDirectory"] || HomebridgeAPI.user.persistPath();
     this.pingInterval = config["pingInterval"] || 10000;
     this.ignoreReEnterExitSeconds = config["ignoreReEnterExitSeconds"] || 0;
     this.wifiLeaveThreshold = config["wifiLeaveThreshold"] || 120;
+    this.grantWifiJoin = config["grantWifiJoin"] || 30;
     this.motionAfterDoorCloseIgnore = config["motionAfterDoorCloseIgnore"] || 5;
     this.people = config['people'];
     this.sensors = config['sensors'];
@@ -63,9 +64,9 @@ PeoplePlatform.prototype = {
             this.peopleAnyOneAccessory = new PeopleAllAccessory(this.log, SENSOR_ANYONE, this);
             this.accessories.push(this.peopleAnyOneAccessory);
         }
-        if(this.nooneSensor) {
-            this.peopleNoOneAccessory = new PeopleAllAccessory(this.log, SENSOR_NOONE, this);
-            this.accessories.push(this.peopleNoOneAccessory);
+        if(this.intrudorSensor) {
+            this.peopleIntrudorAccessory = new PeopleAllAccessory(this.log, SENSOR_INTRUDOR, this);
+            this.accessories.push(this.peopleIntrudorAccessory);
         }
         for(var i = 0; i < this.sensors.length; i++){
           switch (this.sensors[i]['type']) {
@@ -397,7 +398,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
           //this.log('lastDoorActivation = ' + lastDoorActivation);
           //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
-            this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPingMoment, lastDoorActivation, this.platform.wifiLeaveThreshold);
+            this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
             //this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
           }
@@ -410,8 +411,8 @@ PeopleAccessory.prototype.setNewState = function(newState) {
             this.platform.peopleAnyOneAccessory.refreshState();
         }
 
-        if(this.platform.peopleNoOneAccessory) {
-            this.platform.peopleNoOneAccessory.refreshState();
+        if(this.platform.peopleIntrudorAccessory) {
+            this.platform.peopleIntrudorAccessory.refreshState();
         }
 
         var lastSuccessfulPingMoment = "none";
@@ -470,7 +471,7 @@ function PeopleAllAccessory(log, name, platform) {
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
         .setCharacteristic(Characteristic.Name, this.name)
-        .setCharacteristic(Characteristic.SerialNumber, (this.name === SENSOR_NOONE)?"hps-noone":"hps-all")
+        .setCharacteristic(Characteristic.SerialNumber, (this.name === SENSOR_INTRUDOR)?"hps-noone":"hps-all")
         .setCharacteristic(Characteristic.Manufacturer, "Elgato");
 
     this.historyService = new FakeGatoHistoryService("motion", {
@@ -494,27 +495,68 @@ PeopleAllAccessory.prototype.identify = function(callback) {
 
 PeopleAllAccessory.prototype.getStateFromCache = function() {
   var isAnyoneActive = this.getAnyoneStateFromCache();
-  if(this.name === SENSOR_NOONE) {
-      return !isAnyoneActive;
+
+  if(this.name === SENSOR_INTRUDOR) {
+    if isAnyoneActive {
+      if ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin)) {
+        this.historyService.addEntry(
+          {
+            time: moment().unix(),
+            status: 1
+          }
+        );
+        return true;
+      }
     }
-    else {
+    this.historyService.addEntry(
+      {
+        time: moment().unix(),
+        status: 0
+      }
+    );
+    return false;
+  }
+
+  if(this.name === SENSOR_ANYONE) {
+    if isAnyoneActive {
       this.historyService.addEntry(
         {
           time: moment().unix(),
-          status: (isAnyoneActive) ? 1 : 0
-        });
-      return isAnyoneActive;
+          status: 1
+        }
+      );
+    } else {
+      this.historyService.addEntry(
+        {
+          time: moment().unix(),
+          status: 0
+        }
+      );
     }
+    return isAnyoneActive;
   }
+}
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
         var isActive = peopleAccessory.stateCache;
         if(isActive) {
+            this.platform.doorSensor.entryMoment = 0;
             return true;
         }
     }
+
+    var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    var lastMotionDetected = this.platform.MotionSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    if (lastMotionDetected > lastDoorActivation + this.platform.motionAfterDoorCloseIgnore) {
+      return true;
+    }
+
+    if (moment().unix() - lastDoorActivation < this.platform.grantWifiJoin) {
+      return true;
+    }
+
     return false;
 }
 
@@ -556,6 +598,7 @@ function ContactSensorAccessory(log, config, platform) {
     this.lastChange = moment().unix();
     this.closedDuration = 0;
     this.openDuration = 0;
+    this.entryMoment = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -809,6 +852,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         } else {
+          this.entryMoment = moment().unix();
           this.closeDuration += delta;
           this.historyService.addEntry(
             {
@@ -848,6 +892,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
     this.threshold = config['threshold'] || 1;
+    this.lastActivation = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -1045,8 +1090,8 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
             this.platform.peopleAnyOneAccessory.refreshState();
         }
 
-        if(this.platform.peopleNoOneAccessory) {
-            this.platform.peopleNoOneAccessory.refreshState();
+        if(this.platform.peopleIntrudorAccessory) {
+            this.platform.peopleIntrudorAccessory.refreshState();
         }
 
         var now = moment().unix();
