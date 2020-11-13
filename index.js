@@ -31,7 +31,6 @@ module.exports = function(homebridge) {
 
 function PeoplePlatform(log, config){
     this.log = log;
-    this.threshold = config['threshold'] || 5;
     this.anyoneSensor = ((typeof(config['anyoneSensor']) != "undefined" && config['anyoneSensor'] !== null)?config['anyoneSensor']:true);
     this.intrudorSensor = ((typeof(config['intrudorSensor']) != "undefined" && config['intrudorSensor'] !== null)?config['intrudorSensor']:true);
     this.webhookPort = config["webhookPort"] || 51828;
@@ -192,7 +191,7 @@ function PeopleAccessory(log, config, platform) {
     this.name = config['name'];
     this.target = config['target'];
     this.platform = platform;
-    this.threshold = config['threshold'] || this.platform.threshold;
+    this.wifiLeaveThreshold = config['wifiLeaveThreshold'] || this.platform.wifiLeaveThreshold;
     this.pingInterval = config['pingInterval'] || this.platform.pingInterval;
     this.ignoreReEnterExitSeconds = config['ignoreReEnterExitSeconds'] || this.platform.ignoreReEnterExitSeconds;
     this.stateCache = false;
@@ -336,7 +335,7 @@ PeopleAccessory.prototype.isActive = function() {
     var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
-        var activeThreshold = moment().subtract(this.threshold, 'm');
+        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 'm');
         return lastSeenMoment.isAfter(activeThreshold);
     }
     return false;
@@ -366,7 +365,7 @@ PeopleAccessory.prototype.webhookIsOutdated = function() {
     var lastWebhookUnix = this.platform.storage.getItemSync('lastWebhook_' + this.target);
     if (lastWebhookUnix) {
         var lastWebhookMoment = moment(lastWebhookUnix);
-        var activeThreshold = moment().subtract(this.threshold, 'm');
+        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 'm');
         return lastWebhookMoment.isBefore(activeThreshold);
     }
     return true;
@@ -673,7 +672,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
       this.log.debug('... hence returning true');
       return true;
     }
-    
+
     this.log.debug('... hence returning false');
     return false;
 }
@@ -1021,7 +1020,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
-    this.threshold = config['threshold'] || 1;
+    this.hold = config['hold'] || 30;
     this.lastActivation = 0;
 
     class LastActivationCharacteristic extends Characteristic {
@@ -1157,7 +1156,7 @@ MotionSensorAccessory.prototype.isActive = function() {
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
         //this.log('lastSeenMoment is ' + lastSeenMoment);
-        var activeThreshold = moment().subtract(this.threshold, 'm');
+        var activeThreshold = moment().subtract(this.hold, 's');
         //this.log('activeThreshold is ' + activeThreshold);
         var result = lastSeenMoment.isAfter(activeThreshold);
         //this.log('result is ' + result);
