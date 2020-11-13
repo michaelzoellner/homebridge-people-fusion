@@ -587,7 +587,7 @@ PeopleAllAccessory.prototype.getLastActivation = function(callback) {
 PeopleAllAccessory.prototype.getStateFromCache = function() {
   this.log('getStateFromCache for %s', this.name);
   var isAnyoneActive = this.getAnyoneStateFromCache();
-  this.log('isAnyoneActive is %s', isAnyoneActive);
+  this.log.debug('isAnyoneActive is %s', isAnyoneActive);
   if(this.name === SENSOR_INTRUDOR) {
     this.log('here');
     if (isAnyoneActive) {
