@@ -585,13 +585,16 @@ PeopleAllAccessory.prototype.getLastActivation = function(callback) {
 }
 
 PeopleAllAccessory.prototype.getStateFromCache = function() {
-  this.log('getStateFromCache for %s', this.name);
+  this.log.debug('getStateFromCache function triggered for %s', this.name);
   var isAnyoneActive = this.getAnyoneStateFromCache();
-  this.log.debug('isAnyoneActive is %s', isAnyoneActive);
+  this.log.debug('isAnyoneActive is %s', this.name);
   if(this.name === SENSOR_INTRUDOR) {
-    this.log('here');
     if (isAnyoneActive) {
       var newState = ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin));
+      this.log.debug('... this.platform.doorSensor.entryMoment is %s', this.platform.doorSensor.entryMoment);
+      this.log.debug('... moment().unix() - this.platform.doorSensor.entryMoment is %s', moment().unix() - this.platform.doorSensor.entryMoment);
+      this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
+      this.log.debug('... hence returning %s', newState);
       if (newState != this.state) {
         this.state = newState;
         if (newState) {
@@ -616,7 +619,6 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   }
 
   if(this.name === SENSOR_ANYONE) {
-    this.log('this state is %s', this.state);
     if (this.state != isAnyoneActive) {
       this.state = isAnyoneActive;
       if (isAnyoneActive) {
@@ -641,27 +643,38 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 }
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
+    this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
-        this.log('getAnyoneStateFromCache for %s',peopleAccessory.name);
         var isActive = peopleAccessory.stateCache;
-        this.log('stateCache is %s',isActive);
         if(isActive) {
             this.platform.doorSensor.entryMoment = 0;
+            this.log.debug('... returning true because at least %s is present', peopleAccessory.name);
             return true;
         }
     }
 
     var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
     var lastMotionDetected = this.platform.motionSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
-    if (lastMotionDetected > lastDoorActivation + this.platform.motionAfterDoorCloseIgnore) {
+    this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
+    this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s', this.platform.motionAfterDoorCloseIgnore);
+
+
+    if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
+      this.log.debug('... hence returning true');
       return true;
     }
+
+    this.log.debug('... lastDoorActivation was %s s ago', moment().unix() - lastDoorActivation);
+    this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
 
     if (moment().unix() - lastDoorActivation < this.platform.grantWifiJoin) {
+      this.log.debug('... hence returning true');
       return true;
     }
-
+    
+    this.log.debug('... hence returning false');
     return false;
 }
 
