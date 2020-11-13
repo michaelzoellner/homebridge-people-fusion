@@ -564,10 +564,10 @@ function PeopleAllAccessory(log, name, platform) {
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
-  //this.log('getState for %s', this.name);
-  this.log('getStateFromCache result for %s is %s',this.name,this.getStateFromCache());
-  //this.log('encodeState result is %s', PeopleAccessory.encodeState(this.getStateFromCache()));
-  callback(null, PeopleAccessory.encodeState(this.getStateFromCache()));
+  this.log.debug('getState triggered for %s', this.name);
+  var getState = this.getStateFromCache();
+  this.log.debug('getStateFromCache result for %s is %s',this.name,getState);
+  callback(null, PeopleAccessory.encodeState(getState));
 }
 
 PeopleAllAccessory.prototype.identify = function(callback) {
