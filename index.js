@@ -335,7 +335,7 @@ PeopleAccessory.prototype.isActive = function() {
     var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
-        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 'm');
+        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 's');
         return lastSeenMoment.isAfter(activeThreshold);
     }
     return false;
@@ -365,7 +365,7 @@ PeopleAccessory.prototype.webhookIsOutdated = function() {
     var lastWebhookUnix = this.platform.storage.getItemSync('lastWebhook_' + this.target);
     if (lastWebhookUnix) {
         var lastWebhookMoment = moment(lastWebhookUnix);
-        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 'm');
+        var activeThreshold = moment().subtract(this.wifiLeaveThreshold, 's');
         return lastWebhookMoment.isBefore(activeThreshold);
     }
     return true;
