@@ -646,6 +646,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
     this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
+    this.log.debug('... lastSeenUnix is %s', lastSeenUnix);
     var lastMotionDetected = 0;
     if (lastSeenUnix) {
         lastMotionDetected = moment(lastSeenUnix);
