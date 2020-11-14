@@ -587,7 +587,7 @@ PeopleAllAccessory.prototype.getLastActivation = function(callback) {
 PeopleAllAccessory.prototype.getStateFromCache = function() {
   this.log.debug('getStateFromCache function triggered for %s', this.name);
   var isAnyoneActive = this.getAnyoneStateFromCache();
-  this.log.debug('isAnyoneActive is %s', this.name);
+  this.log.debug('isAnyoneActive is %s', isAnyoneActive);
   if(this.name === SENSOR_INTRUDOR) {
     if (isAnyoneActive) {
       var newState = ((this.platform.entryMoment != 0) && (moment().unix() - this.platform.entryMoment > this.platform.grantWifiJoin));
@@ -665,13 +665,13 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
     if (lastMotionDetected/1000 > (lastDoorActivation/1000 + this.platform.motionAfterDoorCloseIgnore)) {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
-      this.platform.entryMoment = moment().unix();
+      this.platform.entryMoment = lastDoorActivation/1000;
       return true;
     }
 
     if ((moment().unix() - lastDoorActivation/1000) < this.platform.grantWifiJoin) {
       this.log.debug('... returning true because lastDoorActivation was less than grantWifiJoin ago');
-      this.platform.entryMoment = moment().unix();
+      this.platform.entryMoment = lastDoorActivation/1000;
       return true;
     }
 
