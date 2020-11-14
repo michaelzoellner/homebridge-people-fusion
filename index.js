@@ -665,11 +665,13 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
     if (lastMotionDetected/1000 > (lastDoorActivation/1000 + this.platform.motionAfterDoorCloseIgnore)) {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
+      this.platform.entryMoment = moment().unix();
       return true;
     }
 
-    if (moment().unix() - lastDoorActivation < this.platform.grantWifiJoin) {
+    if ((moment().unix() - lastDoorActivation/1000) < this.platform.grantWifiJoin) {
       this.log.debug('... returning true because lastDoorActivation was less than grantWifiJoin ago');
+      this.platform.entryMoment = moment().unix();
       return true;
     }
 
@@ -1222,10 +1224,6 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
         }
 
         if (newState) {
-          if (this.platform.entryMoment == 0) {
-            this.platform.entryMoment = moment().unix();
-          }
-
           this.historyService.addEntry(
             {
               time: moment().unix(),
