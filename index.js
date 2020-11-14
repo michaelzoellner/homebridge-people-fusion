@@ -394,7 +394,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
           //this.log('setNewState for %s to false', this.name);
           var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
           //this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
-          var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name)/1000; 
+          var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name)/1000;
           //this.log('lastDoorActivation = ' + lastDoorActivation);
           //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
@@ -1219,13 +1219,14 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     this.motionCounter += 1;
+    this.log('Motion detected, counter is now at %s', this.motionCounter);
     if (this.motionCounter > (this.sensitivity/3)) {
       //this.log('Setting lastMotion for ' + this.name);
       this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
-    } else {
-      this.motionCounter -= 1;
-      this.motionCounter = Math.max(0,this.motionCounter);
     }
+  } else {
+    this.motionCounter -= 1;
+    this.motionCounter = Math.max(0,this.motionCounter);
   }
   var newState = this.isActive();
   this.setNewState(newState);
