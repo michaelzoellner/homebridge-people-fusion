@@ -1101,7 +1101,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.service
     .getCharacteristic(SensitivityCharacteristic)
     .on('get', function(callback){
-      callback(null, 4);
+      callback(null, this.sensitivity);
     }.bind(this))
     .on('set', (value, callback) => {
       this.setSensitivity(value);
