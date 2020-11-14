@@ -47,6 +47,7 @@ function PeoplePlatform(log, config){
     this.webhookQueue = [];
     this.doorSensor = [];
     this.motionSensor = [];
+    this.entryMoment = 0;
 }
 
 PeoplePlatform.prototype = {
@@ -589,9 +590,9 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
   this.log.debug('isAnyoneActive is %s', this.name);
   if(this.name === SENSOR_INTRUDOR) {
     if (isAnyoneActive) {
-      var newState = ((this.platform.doorSensor.entryMoment != 0) && (moment().unix() - this.platform.doorSensor.entryMoment > this.platform.grantWifiJoin));
-      this.log.debug('... this.platform.doorSensor.entryMoment is %s', this.platform.doorSensor.entryMoment);
-      this.log.debug('... moment().unix() - this.platform.doorSensor.entryMoment is %s', moment().unix() - this.platform.doorSensor.entryMoment);
+      var newState = ((this.platform.entryMoment != 0) && (moment().unix() - this.platform.entryMoment > this.platform.grantWifiJoin));
+      this.log.debug('... this.platform.entryMoment is %s', this.platform.entryMoment);
+      this.log.debug('... moment().unix() - this.platform.entryMoment is %s', moment().unix() - this.platform.entryMoment);
       this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
       this.log.debug('... hence returning %s', newState);
       if (newState != this.state) {
@@ -656,7 +657,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         var peopleAccessory = this.platform.peopleAccessories[i];
         var isActive = peopleAccessory.stateCache;
         if(isActive) {
-            this.platform.doorSensor.entryMoment = 0;
+            this.platform.entryMoment = 0;
             this.log.debug('... returning true because at least %s is present', peopleAccessory.name);
             return true;
         }
@@ -718,7 +719,6 @@ function ContactSensorAccessory(log, config, platform) {
     this.lastChange = moment().unix();
     this.closedDuration = 0;
     this.openDuration = 0;
-    this.entryMoment = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -973,7 +973,6 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         } else {
-          this.entryMoment = moment().unix();
           this.closeDuration += delta;
           this.historyService.addEntry(
             {
@@ -1223,6 +1222,10 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
         }
 
         if (newState) {
+          if (this.platform.entryMoment == 0) {
+            this.platform.entryMoment = moment().unix();
+          }
+
           this.historyService.addEntry(
             {
               time: moment().unix(),
