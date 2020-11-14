@@ -648,9 +648,9 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     var lastMotionDetected = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
     this.log.debug('... lastMotionDetected is %s', moment(lastMotionDetected));
 
-    this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s', this.platform.motionAfterDoorCloseIgnore);
-    this.log.debug('... lastDoorActivation was %s s ago', moment().unix() - lastDoorActivation);
-    this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
+    this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s seconds', this.platform.motionAfterDoorCloseIgnore);
+    this.log.debug('... lastDoorActivation was %s seconds ago', moment().unix() - lastDoorActivation/1000);
+    this.log.debug('... this.platform.grantWifiJoin is %s seconds', this.platform.grantWifiJoin);
 
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
