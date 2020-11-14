@@ -1103,7 +1103,10 @@ function MotionSensorAccessory(log, config, platform) {
     .on('get', function(callback){
       callback(null, this.hold);
     }.bind(this))
-    .on('set', this.setDuration(value).bind(this));
+    .on('set', (value, callback) => {
+      this.setDuration(value);
+      callback(null);
+    }.bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
