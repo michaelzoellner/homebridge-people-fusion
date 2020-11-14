@@ -681,6 +681,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
 PeopleAllAccessory.prototype.refreshState = function() {
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
+    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
 }
 
 PeopleAllAccessory.prototype.getServices = function() {
@@ -1026,6 +1027,12 @@ function MotionSensorAccessory(log, config, platform) {
     if (hold) {
       this.hold = hold;
     }
+    this.sensitivity = 4;
+    var sensitivity = this.platform.storage.getItemSync('sensitivity_' + this.name);
+    if (sensitivity) {
+      this.sensitivity = sensitivity;
+    }
+    this.motionCounter = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -1095,7 +1102,12 @@ function MotionSensorAccessory(log, config, platform) {
     .getCharacteristic(SensitivityCharacteristic)
     .on('get', function(callback){
       callback(null, 4);
-    }.bind(this));
+    }.bind(this))
+    .on('set', (value, callback) => {
+      this.setSensitivity(value);
+      callback(null);
+    });
+
 
     this.service.addCharacteristic(DurationCharacteristic);
     this.service
@@ -1140,9 +1152,15 @@ MotionSensorAccessory.prototype.getState = function(callback) {
 }
 
 MotionSensorAccessory.prototype.setDuration = function(value) {
-  this.log('setDuration triggered with value of %s', value);
+  this.log.debug('setDuration triggered with value of %s', value);
   this.platform.storage.setItemSync('hold_' + this.name, value);
   this.hold = value;
+}
+
+MotionSensorAccessory.prototype.setSensitivity = function(value) {
+  this.log.debug('setSensitivity triggered with value of %s', value);
+  this.platform.storage.setItemSync('sensitivity_' + this.name, value);
+  this.sensitivity = value;
 }
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
@@ -1198,8 +1216,14 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   //this.log('OK');
   //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
-    //this.log('Setting lastMotion for ' + this.name);
-    this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
+    this.motionCounter += 1;
+    if (this.motionCounter > (this.sensitivity/3)) {
+      //this.log('Setting lastMotion for ' + this.name);
+      this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
+    } else {
+      this.motionCounter -= 1;
+      this.motionCounter = Math.max(0,this.motionCounter);
+    }
   }
   var newState = this.isActive();
   this.setNewState(newState);
