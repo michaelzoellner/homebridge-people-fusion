@@ -1225,11 +1225,10 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
       this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
     }
   } else {
-    this.motionCounter -= 1;
     if (this.motionCounter > 0) {
-      this.log('No motion detected, counter is now at %s', this.motionCounter);
+      this.log('No motion detected, counter is set to zero.');
     }
-    this.motionCounter = Math.max(0,this.motionCounter);
+    this.motionCounter = 0;
   }
   var newState = this.isActive();
   this.setNewState(newState);
