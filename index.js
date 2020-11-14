@@ -643,6 +643,18 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
+    var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
+    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
+    var lastMotionDetected = 0;
+    if (lastSeenUnix) {
+        lastMotionDetected = moment(lastSeenUnix);
+      }
+    this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
+    this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s', this.platform.motionAfterDoorCloseIgnore);
+    this.log.debug('... lastDoorActivation was %s s ago', moment().unix() - lastDoorActivation);
+    this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
+
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
         var peopleAccessory = this.platform.peopleAccessories[i];
         var isActive = peopleAccessory.stateCache;
@@ -653,27 +665,17 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         }
     }
 
-    var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
-    this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
-    var lastMotionDetected = this.platform.motionSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
-    this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
-    this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s', this.platform.motionAfterDoorCloseIgnore);
-
-
     if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
-      this.log.debug('... hence returning true');
+      this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
       return true;
     }
-
-    this.log.debug('... lastDoorActivation was %s s ago', moment().unix() - lastDoorActivation);
-    this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
-
+    
     if (moment().unix() - lastDoorActivation < this.platform.grantWifiJoin) {
-      this.log.debug('... hence returning true');
+      this.log.debug('... returning true because lastDoorActivation was less than grantWifiJoin ago');
       return true;
     }
 
-    this.log.debug('... hence returning false');
+    this.log.debug('... returning false');
     return false;
 }
 
@@ -1021,7 +1023,6 @@ function MotionSensorAccessory(log, config, platform) {
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
     this.hold = config['hold'] || 30;
-    this.lastActivation = 0;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -1222,9 +1223,6 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
         if(this.platform.peopleIntrudorAccessory) {
             this.platform.peopleIntrudorAccessory.refreshState();
         }
-
-        var now = moment().unix();
-        this.lastActivation = now - this.historyService.getInitialTime();
 
         if (newState) {
           this.historyService.addEntry(
