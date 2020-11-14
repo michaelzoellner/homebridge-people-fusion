@@ -1137,7 +1137,7 @@ MotionSensorAccessory.prototype.getState = function(callback) {
 }
 
 MotionSensorAccessory.prototype.setDuration = function(value) {
-  this.log.debug('setDuration triggered with value of %s', value);
+  this.log('setDuration triggered with value of %s', value);
   this.platform.storage.setItemSync('hold_' + this.name, value);
   this.hold = value;
 }
