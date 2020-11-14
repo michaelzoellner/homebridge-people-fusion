@@ -1226,6 +1226,9 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     }
   } else {
     this.motionCounter -= 1;
+    if (this.motionCounter > 0) {
+      this.log('No motion detected, counter is now at %s', this.motionCounter);
+    }
     this.motionCounter = Math.max(0,this.motionCounter);
   }
   var newState = this.isActive();
