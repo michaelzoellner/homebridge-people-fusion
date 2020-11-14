@@ -643,15 +643,11 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
-    var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
+    var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.motionSensor.name);
     this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
-    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
-    this.log.debug('... lastSeenUnix is %s', lastSeenUnix);
-    var lastMotionDetected = 0;
-    if (lastSeenUnix) {
-        lastMotionDetected = moment(lastSeenUnix);
-      }
+    var lastMotionDetected = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
     this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
+
     this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s', this.platform.motionAfterDoorCloseIgnore);
     this.log.debug('... lastDoorActivation was %s s ago', moment().unix() - lastDoorActivation);
     this.log.debug('... this.platform.grantWifiJoin is %s', this.platform.grantWifiJoin);
@@ -666,7 +662,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         }
     }
 
-    if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
+    if (lastMotionDetected/1000 > (lastDoorActivation/1000 + this.platform.motionAfterDoorCloseIgnore)) {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
       return true;
     }
@@ -965,6 +961,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
 
         var now = moment().unix();
         this.lastActivation = now - this.historyService.getInitialTime();
+        this.platform.storage.setItemSync('lastDoorChange_' + this.name, Date.now());
 
         if (newState) {
           this.openDuration += delta;
