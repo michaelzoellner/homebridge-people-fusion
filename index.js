@@ -1026,11 +1026,13 @@ function MotionSensorAccessory(log, config, platform) {
     var hold = this.platform.storage.getItemSync('hold_' + this.name);
     if (hold) {
       this.hold = hold;
+      this.log('HoldDuration of %s read from storage with value %s', this.name, this.hold);
     }
     this.sensitivity = 4;
     var sensitivity = this.platform.storage.getItemSync('sensitivity_' + this.name);
     if (sensitivity) {
       this.sensitivity = sensitivity - 1; // in storage, the value +1 will be stored
+      this.log('Sensitivity of %s read from storage with value %s', this.name, this.sensitivity);
     }
     this.motionCounter = 0;
 
