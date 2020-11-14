@@ -643,7 +643,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
-    var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.motionSensor.name);
+    var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
     this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
     var lastMotionDetected = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
     this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
