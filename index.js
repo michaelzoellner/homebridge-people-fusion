@@ -645,7 +645,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
     var lastDoorActivation = this.platform.doorSensor.lastActivation + this.platform.doorSensor.historyService.getInitialTime();
     this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
-    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
+    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
     var lastMotionDetected = 0;
     if (lastSeenUnix) {
         lastMotionDetected = moment(lastSeenUnix);
@@ -669,7 +669,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
       return true;
     }
-    
+
     if (moment().unix() - lastDoorActivation < this.platform.grantWifiJoin) {
       this.log.debug('... returning true because lastDoorActivation was less than grantWifiJoin ago');
       return true;
