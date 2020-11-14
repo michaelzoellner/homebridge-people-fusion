@@ -1021,7 +1021,11 @@ function MotionSensorAccessory(log, config, platform) {
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
-    this.hold = config['hold'] || 30;
+    this.hold = 30;
+    var hold = this.platform.storage.getItemSync('hold_' + this.name);
+    if (hold) {
+      this.hold = hold;
+    }
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -1097,8 +1101,9 @@ function MotionSensorAccessory(log, config, platform) {
     this.service
     .getCharacteristic(DurationCharacteristic)
     .on('get', function(callback){
-      callback(null, 5);
-    }.bind(this));
+      callback(null, this.hold);
+    }.bind(this))
+    .on('set', this.setDuration(value).bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
@@ -1129,6 +1134,11 @@ MotionSensorAccessory.encodeState = function(state) {
 
 MotionSensorAccessory.prototype.getState = function(callback) {
     callback(null, PeopleAccessory.encodeState(this.stateCache));
+}
+
+MotionSensorAccessory.prototype.setDuration = function(value) {
+  this.log.debug('setDuration triggered with value of %s', value);
+  this.hold = value;
 }
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
