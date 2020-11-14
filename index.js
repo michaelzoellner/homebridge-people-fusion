@@ -1159,7 +1159,7 @@ MotionSensorAccessory.prototype.setDuration = function(value) {
 
 MotionSensorAccessory.prototype.setSensitivity = function(value) {
   this.log('setSensitivity triggered with value of %s', value);
-  this.platform.storage.setItemSync('sensitivity_' + this.name, value + 1); // in storage, the value +1 will be stored 
+  this.platform.storage.setItemSync('sensitivity_' + this.name, value + 1); // in storage, the value +1 will be stored
   this.sensitivity = value;
 }
 
