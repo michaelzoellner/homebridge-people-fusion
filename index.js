@@ -876,8 +876,8 @@ function ContactSensorAccessory(log, config, platform) {
             disableTimer: false
         });
 
-    this.historyService.addCharacteristic(ResetTotalCharacteristic);
-    this.historyService
+    this.service.addCharacteristic(ResetTotalCharacteristic);
+    this.service
       .getCharacteristic(ResetTotalCharacteristic)
       .on('get', this.getEveResetTotal.bind(this))
       .on('set', this.setEveResetTotal.bind(this))
