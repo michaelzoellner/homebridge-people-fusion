@@ -1231,6 +1231,7 @@ MotionSensorAccessory.prototype.isActive = function() {
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
 
     if (lastSeenUnix) {
+        this.log.debug('....lastSeenUnix is ' + lastSeenUnix);
         var lastSeenMoment = moment(lastSeenUnix);
         this.log.debug('....lastSeenMoment is ' + lastSeenMoment);
         var activeThreshold = moment().subtract(this.hold, 's');
