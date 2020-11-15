@@ -1227,15 +1227,15 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
-    this.log.debug('isActive called for %s',this.name);
+    this.log('isActive called for %s',this.name);
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
 
     if (lastSeenUnix) {
-        this.log.debug('....lastSeenUnix is ' + lastSeenUnix);
+        this.log('....lastSeenUnix is ' + lastSeenUnix);
         var activeThreshold = moment().unix() - this.hold;
-        this.log.debug('... activeThreshold is ' + activeThreshold);
-        var result = (lastSeenMoment > activeThreshold);
-        this.log.debug('... result is ' + result);
+        this.log('... activeThreshold is ' + activeThreshold);
+        var result = (lastSeenUnix > activeThreshold);
+        this.log('... result is ' + result);
         return result;
     }
     return false;
