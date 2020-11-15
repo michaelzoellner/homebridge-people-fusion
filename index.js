@@ -930,7 +930,7 @@ ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
   this.lastReset = moment().unix() - this.lastResetReference;
   this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);    
     
-  this.doorHistory.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
+  this.historyService.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
   callback(null);
 }
 
