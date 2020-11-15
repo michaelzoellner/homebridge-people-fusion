@@ -645,9 +645,9 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
 PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('getAnyoneStateFromCache triggered for %s', this.name);
     var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
-    this.log.debug('... lastDoorActivation is %s', moment(lastDoorActivation));
+    this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
     var lastMotionDetected = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
-    this.log.debug('... lastMotionDetected is %s', moment(lastMotionDetected));
+    this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
 
     this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s seconds', this.platform.motionAfterDoorCloseIgnore);
     this.log.debug('... lastDoorActivation was %s seconds ago', moment().unix() - lastDoorActivation);
@@ -663,7 +663,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         }
     }
 
-    if (lastMotionDetected/1000 > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
+    if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
       this.platform.entryMoment = lastDoorActivation;
       return true;
@@ -1210,9 +1210,8 @@ MotionSensorAccessory.prototype.setSensitivity = function(value) {
 }
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
-    var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
-    if (lastSeenUnix) {
-        var lastSeenMoment = moment(lastSeenUnix).unix();
+    var lastSeenMoment = this.platform.storage.getItemSync('lastMotion_' + this.name);
+    if (lastSeenMoment) {
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
     }
 }
@@ -1228,16 +1227,16 @@ MotionSensorAccessory.prototype.initStateCache = function() {
 }
 
 MotionSensorAccessory.prototype.isActive = function() {
-    //this.log('isActive called.');
+    this.log.debug('isActive called for %s',this.name);
     var lastSeenUnix = this.platform.storage.getItemSync('lastMotion_' + this.name);
 
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix);
-        //this.log('lastSeenMoment is ' + lastSeenMoment);
+        this.log.debug('....lastSeenMoment is ' + lastSeenMoment);
         var activeThreshold = moment().subtract(this.hold, 's');
-        //this.log('activeThreshold is ' + activeThreshold);
+        this.log.debug('... activeThreshold is ' + activeThreshold);
         var result = lastSeenMoment.isAfter(activeThreshold);
-        //this.log('result is ' + result);
+        this.log.debug('... result is ' + result);
         return result;
     }
     return false;
@@ -1266,7 +1265,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     this.log('Motion detected, counter is now at %s', this.motionCounter);
     if (this.motionCounter > (this.sensitivity/3)) {
       //this.log('Setting lastMotion for ' + this.name);
-      this.platform.storage.setItemSync('lastMotion_' + this.name, Date.now());
+      this.platform.storage.setItemSync('lastMotion_' + this.name, Moment().unix());
     }
   } else {
     if (this.motionCounter > 0) {
