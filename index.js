@@ -394,7 +394,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
           //this.log('setNewState for %s to false', this.name);
           var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
           //this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
-          var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name)/1000;
+          var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
           //this.log('lastDoorActivation = ' + lastDoorActivation);
           //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
@@ -650,7 +650,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('... lastMotionDetected is %s', moment(lastMotionDetected));
 
     this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s seconds', this.platform.motionAfterDoorCloseIgnore);
-    this.log.debug('... lastDoorActivation was %s seconds ago', moment().unix() - lastDoorActivation/1000);
+    this.log.debug('... lastDoorActivation was %s seconds ago', moment().unix() - lastDoorActivation);
     this.log.debug('... this.platform.grantWifiJoin is %s seconds', this.platform.grantWifiJoin);
 
     for(var i = 0; i < this.platform.peopleAccessories.length; i++){
@@ -663,15 +663,15 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         }
     }
 
-    if (lastMotionDetected/1000 > (lastDoorActivation/1000 + this.platform.motionAfterDoorCloseIgnore)) {
+    if (lastMotionDetected/1000 > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
       this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
-      this.platform.entryMoment = lastDoorActivation/1000;
+      this.platform.entryMoment = lastDoorActivation;
       return true;
     }
 
-    if ((moment().unix() - lastDoorActivation/1000) < this.platform.grantWifiJoin) {
+    if ((moment().unix() - lastDoorActivation) < this.platform.grantWifiJoin) {
       this.log.debug('... returning true because lastDoorActivation was less than grantWifiJoin ago');
-      this.platform.entryMoment = lastDoorActivation/1000;
+      this.platform.entryMoment = lastDoorActivation;
       return true;
     }
 
@@ -715,21 +715,21 @@ function ContactSensorAccessory(log, config, platform) {
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
-    
+
     this.timesOpened = 0;
     var timesOpened = this.platform.storage.getItemSync('timesOpened_' + this.name);
     if (timesOpened) {
         this.log('Loaded timesOpened value of %s from storage',timesOpened);
         this.timesOpened = timesOpened;
     }
-    
+
     this.lastActivation = 0;
     var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.name);
     if (lastDoorActivation) {
         this.log('Loaded lastDoorActivation value of %s from storage',lastDoorActivation);
         this.lastActivation = lastDoorActivation;
     }
-    
+
     this.lastResetReference = 978285600;
     this.lastReset = moment().unix() - this.lastResetReference;
     var lastReset = this.platform.storage.getItemSync('lastReset_' + this.name);
@@ -737,21 +737,21 @@ function ContactSensorAccessory(log, config, platform) {
         this.log('Loaded lastReset value of %s from storage',lastReset);
         this.lastReset = lastReset;
     }
-    
+
     this.closedDuration = 0;
     var closedDuration = this.platform.storage.getItemSync('closedDuration_' + this.name);
     if (closedDuration) {
         this.log('Loaded closedDuration value of %s from storage',closedDuration);
         this.closedDuration = closedDuration;
     }
-    
+
     this.openDuration = 0;
     var openDuration = this.platform.storage.getItemSync('openDuration_' + this.name);
     if (openDuration) {
         this.log('Loaded openDuration value of %s from storage',openDuration);
         this.openDuration = openDuration;
     }
-    
+
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -920,16 +920,16 @@ ContactSensorAccessory.prototype.getEveResetTotal = function(callback) {
 ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
   this.timesOpened = 0;
   this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);
-  
+
   this.openDuration = 0;
   this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
-    
+
   this.closeDuration = 0;
-  this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);  
-    
+  this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);
+
   this.lastReset = moment().unix() - this.lastResetReference;
-  this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);    
-    
+  this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);
+
   this.historyService.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
   callback(null);
 }
@@ -1007,10 +1007,10 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         if (newState) {
           this.openDuration += delta;
           this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
-          
+
           this.timesOpened += 1;
-          this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);  
-            
+          this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);
+
           this.historyService.addEntry(
             {
               time: moment().unix(),
@@ -1019,8 +1019,8 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
           );
         } else {
           this.closeDuration += delta;
-          this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);    
-            
+          this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);
+
           this.historyService.addEntry(
             {
               time: moment().unix(),
