@@ -927,7 +927,7 @@ ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
   this.closeDuration = 0;
   this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);  
     
-  this.doorExtra.lastReset = moment().unix() - this.lastResetReference;
+  this.lastReset = moment().unix() - this.lastResetReference;
   this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);    
     
   this.doorHistory.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
