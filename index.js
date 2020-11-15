@@ -917,7 +917,7 @@ ContactSensorAccessory.prototype.getEveResetTotal = function(callback) {
     callback(null, this.lastReset);
 }
 
-ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
+ContactSensorAccessory.prototype.setEveResetTotal = function (whatever) {
   this.timesOpened = 0;
   this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);
 
@@ -930,8 +930,7 @@ ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
   this.lastReset = moment().unix() - this.lastResetReference;
   this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);
 
-  // this.service.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
-  callback(null);
+  // this.service.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset);
 }
 
 
