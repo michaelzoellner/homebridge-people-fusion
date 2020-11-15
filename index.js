@@ -1232,11 +1232,9 @@ MotionSensorAccessory.prototype.isActive = function() {
 
     if (lastSeenUnix) {
         this.log.debug('....lastSeenUnix is ' + lastSeenUnix);
-        var lastSeenMoment = moment(lastSeenUnix);
-        this.log.debug('....lastSeenMoment is ' + lastSeenMoment);
-        var activeThreshold = moment().subtract(this.hold, 's');
+        var activeThreshold = moment().now() - this.hold;
         this.log.debug('... activeThreshold is ' + activeThreshold);
-        var result = lastSeenMoment.isAfter(activeThreshold);
+        var result = (lastSeenMoment > activeThreshold);
         this.log.debug('... result is ' + result);
         return result;
     }
