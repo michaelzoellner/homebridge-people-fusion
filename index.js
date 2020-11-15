@@ -946,7 +946,7 @@ ContactSensorAccessory.prototype.getState = function(callback) {
 }
 
 ContactSensorAccessory.prototype.getLastActivation = function(callback) {
-    callback(null, this.lastActivation);
+    callback(null, this.lastActivation - this.historyService.getInitialTime());
 }
 
 ContactSensorAccessory.prototype.getTimesOpened = function(callback) {
@@ -1001,8 +1001,8 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
         this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(ContactSensorAccessory.encodeState(newState));
 
         var now = moment().unix();
-        this.lastActivation = now - this.historyService.getInitialTime();
-        this.platform.storage.setItemSync('lastDoorChange_' + this.name, Date.now());
+        this.lastActivation = now;
+        this.platform.storage.setItemSync('lastDoorChange_' + this.name, now);
 
         if (newState) {
           this.openDuration += delta;
