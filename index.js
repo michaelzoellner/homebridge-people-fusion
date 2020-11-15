@@ -1006,7 +1006,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
 
         if (newState) {
           this.openDuration += delta;
-          this.platform.storage.setItemSync('openDuration_' + this.name, openDuration);
+          this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
           
           this.timesOpened += 1;
           this.platform.storage.setItemSync('timesOpened_' + this.name, timesOpened);  
@@ -1019,7 +1019,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
           );
         } else {
           this.closeDuration += delta;
-          this.platform.storage.setItemSync('closeDuration_' + this.name, closeDuration);    
+          this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);    
             
           this.historyService.addEntry(
             {
