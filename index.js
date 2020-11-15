@@ -719,12 +719,14 @@ function ContactSensorAccessory(log, config, platform) {
     this.timesOpened = 0;
     var timesOpened = this.platform.storage.getItemSync('timesOpened_' + this.name);
     if (timesOpened) {
+        this.log('Loaded timesOpened value of %s from storage',timesOpened);
         this.timesOpened = timesOpened;
     }
     
     this.lastActivation = 0;
     var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.name);
     if (lastDoorActivation) {
+        this.log('Loaded lastDoorActivation value of %s from storage',lastDoorActivation);
         this.lastActivation = lastDoorActivation;
     }
     
@@ -732,18 +734,21 @@ function ContactSensorAccessory(log, config, platform) {
     this.lastReset = moment().unix() - this.lastResetReference;
     var lastReset = this.platform.storage.getItemSync('lastReset_' + this.name);
     if (lastReset) {
+        this.log('Loaded lastReset value of %s from storage',lastReset);
         this.lastReset = lastReset;
     }
     
     this.closedDuration = 0;
     var closedDuration = this.platform.storage.getItemSync('closedDuration_' + this.name);
     if (closedDuration) {
+        this.log('Loaded closedDuration value of %s from storage',closedDuration);
         this.closedDuration = closedDuration;
     }
     
     this.openDuration = 0;
     var openDuration = this.platform.storage.getItemSync('openDuration_' + this.name);
     if (openDuration) {
+        this.log('Loaded openDuration value of %s from storage',openDuration);
         this.openDuration = openDuration;
     }
     
