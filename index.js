@@ -1265,7 +1265,7 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
     this.log('Motion detected, counter is now at %s', this.motionCounter);
     if (this.motionCounter > (this.sensitivity/3)) {
       //this.log('Setting lastMotion for ' + this.name);
-      this.platform.storage.setItemSync('lastMotion_' + this.name, Moment().unix());
+      this.platform.storage.setItemSync('lastMotion_' + this.name, moment().unix());
     }
   } else {
     if (this.motionCounter > 0) {
