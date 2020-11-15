@@ -715,13 +715,38 @@ function ContactSensorAccessory(log, config, platform) {
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
+    
     this.timesOpened = 0;
+    var timesOpened = this.platform.storage.getItemSync('timesOpened_' + this.name);
+    if (timesOpened) {
+        this.timesOpened = timesOpened;
+    }
+    
     this.lastActivation = 0;
+    var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.name);
+    if (lastDoorActivation) {
+        this.lastActivation = lastDoorActivation;
+    }
+    
     this.lastResetReference = 978285600;
     this.lastReset = moment().unix() - this.lastResetReference;
-    this.lastChange = moment().unix();
+    var lastReset = this.platform.storage.getItemSync('lastReset_' + this.name);
+    if (lastReset) {
+        this.lastReset = lastReset;
+    }
+    
     this.closedDuration = 0;
+    var closedDuration = this.platform.storage.getItemSync('closedDuration_' + this.name);
+    if (closedDuration) {
+        this.closedDuration = closedDuration;
+    }
+    
     this.openDuration = 0;
+    var openDuration = this.platform.storage.getItemSync('openDuration_' + this.name);
+    if (openDuration) {
+        this.openDuration = openDuration;
+    }
+    
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -888,10 +913,18 @@ ContactSensorAccessory.prototype.getEveResetTotal = function(callback) {
 }
 
 ContactSensorAccessory.prototype.setEveResetTotal = function (callback) {
-  this.doorExtra.timesOpened = 0;
+  this.timesOpened = 0;
+  this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);
+  
   this.openDuration = 0;
+  this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
+    
   this.closeDuration = 0;
+  this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);  
+    
   this.doorExtra.lastReset = moment().unix() - this.lastResetReference;
+  this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);    
+    
   this.doorHistory.getCharacteristic(ResetTotalCharacteristic).updateValue(this.lastReset)
   callback(null);
 }
@@ -968,7 +1001,11 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
 
         if (newState) {
           this.openDuration += delta;
+          this.platform.storage.setItemSync('openDuration_' + this.name, openDuration);
+          
           this.timesOpened += 1;
+          this.platform.storage.setItemSync('timesOpened_' + this.name, timesOpened);  
+            
           this.historyService.addEntry(
             {
               time: moment().unix(),
@@ -977,6 +1014,8 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
           );
         } else {
           this.closeDuration += delta;
+          this.platform.storage.setItemSync('closeDuration_' + this.name, closeDuration);    
+            
           this.historyService.addEntry(
             {
               time: moment().unix(),
