@@ -1009,7 +1009,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
           this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
           
           this.timesOpened += 1;
-          this.platform.storage.setItemSync('timesOpened_' + this.name, timesOpened);  
+          this.platform.storage.setItemSync('timesOpened_' + this.name, this.timesOpened);  
             
           this.historyService.addEntry(
             {
