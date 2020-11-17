@@ -196,6 +196,7 @@ function PeopleAccessory(log, config, platform) {
     this.pingInterval = config['pingInterval'] || this.platform.pingInterval;
     this.ignoreReEnterExitSeconds = config['ignoreReEnterExitSeconds'] || this.platform.ignoreReEnterExitSeconds;
     this.stateCache = false;
+    this.setDisableIgnoreBefore = false;
 
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
@@ -398,11 +399,17 @@ PeopleAccessory.prototype.setNewState = function(newState) {
           //this.log('lastDoorActivation = ' + lastDoorActivation);
           //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
-            this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
+            if (this.setDisableIgnoreBefore) {
+              this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
+            } else {
+              this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
+              this.setDisableIgnoreBefore = true;
+            }
             //this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
           }
         }
+        this.setDisableIgnoreBefore = false;
 
         this.stateCache = newState;
         this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
