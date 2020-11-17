@@ -979,10 +979,9 @@ ContactSensorAccessory.prototype.readInput = function(err) {
       this.log.debug('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
       this.repeatedError = true;
     }
+  } else {
+    gpio.read(this.pin, this.processInput.bind(this));
   }
-  //var value = 2;
-  gpio.read(this.pin, this.processInput.bind(this));
-  //this.log('value = ' + value);
 }
 
 ContactSensorAccessory.prototype.processInput = function(err,value) {
@@ -1289,20 +1288,21 @@ MotionSensorAccessory.prototype.readInput = function(err) {
       this.log.debug('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
       this.repeatedError = true;
     }
-    throw err;
   } else {
-    this.repeatedError = false;
+    gpio.read(this.pin, this.processInput.bind(this));
   }
-  //var value = 2;
-  gpio.read(this.pin, this.processInput.bind(this));
-  //this.log('value = ' + value);
 }
 
 MotionSensorAccessory.prototype.processInput = function(err,value) {
   if (err) {
-    this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
-    throw err;
+    if (this.repeatedError) {
+      this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+    } else {
+      this.log.debug('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+      this.repeatedError = true;
+    }
   }
+  this.repeatedError = false;
   //this.log('OK');
   //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
