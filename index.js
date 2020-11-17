@@ -1011,6 +1011,7 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
             time: moment().unix(),
             status: 0
           }
+        );
       } else {
         this.historyService.addEntry(
           {
