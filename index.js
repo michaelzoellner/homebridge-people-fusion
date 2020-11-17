@@ -712,9 +712,11 @@ function ContactSensorAccessory(log, config, platform) {
     this.name = config['name'];
     this.type = config['type'];
     this.pin = config['pin'];
+    this.repeatedError = false;
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.isDoorClosed = true;
+    this.coldStart = true;
 
     this.timesOpened = 0;
     var timesOpened = this.platform.storage.getItemSync('timesOpened_' + this.name);
@@ -875,12 +877,6 @@ function ContactSensorAccessory(log, config, platform) {
             storage: 'fs',
             disableTimer: false
         });
-    this.historyService.addEntry(
-            {
-              time: moment().unix(),
-              status: 0
-            }
-          );
 
     this.service.addCharacteristic(ResetTotalCharacteristic);
     this.service
@@ -970,8 +966,15 @@ ContactSensorAccessory.prototype.setDefaults = function() {
 ContactSensorAccessory.prototype.readInput = function(err) {
   //this.log('worked');
   if (err) {
-    this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+    if (this.repeatedError) {
+      this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+    } else {
+      this.log.debug('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+      this.repeatedError = true;
+    }
     throw err;
+  } else {
+    this.repeatedError = false;
   }
   //var value = 2;
   gpio.read(this.pin, this.processInput.bind(this));
@@ -1000,8 +1003,27 @@ ContactSensorAccessory.prototype.arp = function() {
 
 ContactSensorAccessory.prototype.setNewState = function(newState) {
     var oldState = this.isDoorClosed;
-    if (oldState != newState) {
-        var delta = moment().unix() - this.lastChange;
+    if (this.coldStart) {
+      this.coldStart = false;
+      if (newState) {
+        this.historyService.addEntry(
+          {
+            time: moment().unix(),
+            status: 0
+          }
+      } else {
+        this.historyService.addEntry(
+          {
+            time: moment().unix(),
+            status: 1
+          }
+        );
+      }
+    }
+
+    if (oldState != newState)  {
+
+        var delta = moment().unix() - this.lastActivation;
         this.isDoorClosed = newState;
         this.service.getCharacteristic(Characteristic.ContactSensorState).updateValue(ContactSensorAccessory.encodeState(newState));
 
@@ -1068,6 +1090,7 @@ function MotionSensorAccessory(log, config, platform) {
     this.log = log;
     this.name = config['name'];
     this.pin = config['pin'];
+    this.repeatedError = false;
     this.platform = platform;
     this.checkInterval = config['checkInterval'] || this.platform.checkInterval;
     this.stateCache = false;
@@ -1249,8 +1272,15 @@ MotionSensorAccessory.prototype.isActive = function() {
 MotionSensorAccessory.prototype.readInput = function(err) {
   //this.log('worked');
   if (err) {
-    this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+    if (this.repeatedError) {
+      this.log('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+    } else {
+      this.log.debug('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
+      this.repeatedError = true;
+    }
     throw err;
+  } else {
+    this.repeatedError = false;
   }
   //var value = 2;
   gpio.read(this.pin, this.processInput.bind(this));
@@ -1266,14 +1296,14 @@ MotionSensorAccessory.prototype.processInput = function(err,value) {
   //this.log('Read value for ' + this.name + ' is ' + value);
   if (value) {
     this.motionCounter += 1;
-    this.log('Motion detected, counter is now at %s', this.motionCounter);
+    this.log.debug('Motion detected, counter is now at %s', this.motionCounter);
     if (this.motionCounter > (this.sensitivity/3)) {
       //this.log('Setting lastMotion for ' + this.name);
       this.platform.storage.setItemSync('lastMotion_' + this.name, moment().unix());
     }
   } else {
     if (this.motionCounter > 0) {
-      this.log('No motion detected, counter is set to zero.');
+      this.log.debug('No motion detected, counter is set to zero.');
     }
     this.motionCounter = 0;
   }
