@@ -979,9 +979,6 @@ ContactSensorAccessory.prototype.readInput = function(err) {
       this.log.debug('Error in GPIO setup of ' + this.name + ' with message: ' + err.message);
       this.repeatedError = true;
     }
-    throw err;
-  } else {
-    this.repeatedError = false;
   }
   //var value = 2;
   gpio.read(this.pin, this.processInput.bind(this));
@@ -990,12 +987,18 @@ ContactSensorAccessory.prototype.readInput = function(err) {
 
 ContactSensorAccessory.prototype.processInput = function(err,value) {
   if (err) {
-    this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
-    throw err;
+    if (this.repeatedError) {
+      this.log('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+    } else {
+      this.log.debug('Error in GPIO reading of ' + this.name + ' with message: ' + err.message);
+      this.repeatedError = true;
+    }
+  } else {
+    this.repeatedError = false;
+    this.setNewState(value);
   }
   //this.log('OK');
   //this.log('value for ' + this.name + ' is ' + value);
-  this.setNewState(value);
 }
 
 ContactSensorAccessory.prototype.arp = function() {
