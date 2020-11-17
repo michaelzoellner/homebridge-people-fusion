@@ -875,6 +875,12 @@ function ContactSensorAccessory(log, config, platform) {
             storage: 'fs',
             disableTimer: false
         });
+    this.historyService.addEntry(
+            {
+              time: moment().unix(),
+              status: 0
+            }
+          );
 
     this.service.addCharacteristic(ResetTotalCharacteristic);
     this.service
