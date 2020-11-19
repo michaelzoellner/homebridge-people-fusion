@@ -255,32 +255,32 @@ function PeopleAccessory(log, config, platform) {
     this.service
         .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
-
-    this.service.addCharacteristic(LastActivationCharacteristic);
-    this.service
-        .getCharacteristic(LastActivationCharacteristic)
-        .on('get', this.getLastActivation.bind(this));
-
-
-    this.service.addCharacteristic(SensitivityCharacteristic);
-    this.service
-        .getCharacteristic(SensitivityCharacteristic)
-        .on('get', function(callback){
-            callback(null, 4);
-        }.bind(this));
-
-    this.service.addCharacteristic(DurationCharacteristic);
-    this.service
-        .getCharacteristic(DurationCharacteristic)
-        .on('get', function(callback){
-            callback(null, 5);
-        }.bind(this));
-
+    
+    
     this.motionService = new Service.MotionSensor(this.name);
     this.motionService
         .getCharacteristic(Characteristic.MotionDetected)
         .on('get', this.getState.bind(this));
 
+    this.motionService.addCharacteristic(LastActivationCharacteristic);
+    this.motionService
+        .getCharacteristic(LastActivationCharacteristic)
+        .on('get', this.getLastActivation.bind(this));
+
+
+    this.motionService.addCharacteristic(SensitivityCharacteristic);
+    this.motionService
+        .getCharacteristic(SensitivityCharacteristic)
+        .on('get', function(callback){
+            callback(null, 4);
+        }.bind(this));
+
+    this.motionService.addCharacteristic(DurationCharacteristic);
+    this.motionService
+        .getCharacteristic(DurationCharacteristic)
+        .on('get', function(callback){
+            callback(null, 5);
+        }.bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
     this.accessoryService
@@ -390,14 +390,12 @@ PeopleAccessory.prototype.successfulPingOccurredAfterWebhook = function() {
 PeopleAccessory.prototype.setNewState = function(newState) {
     var oldState = this.stateCache;
     if (oldState != newState) {
+        
+        var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
+        var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
 
         if (!newState) {
-          //this.log('setNewState for %s to false', this.name);
-          var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
-          //this.log('lastSuccessfulPing = ' + lastSuccessfulPing);
-          var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
-          //this.log('lastDoorActivation = ' + lastDoorActivation);
-          //this.log('platform.wifiLeaveThreshold = ' + this.platform.wifiLeaveThreshold);
+          
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
             if (this.setDisableIgnoreBefore) {
               this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
@@ -412,9 +410,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         this.setDisableIgnoreBefore = false;
 
         this.stateCache = newState;
-        this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
-        this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
-
+        
         if(this.platform.peopleAnyOneAccessory) {
             this.platform.peopleAnyOneAccessory.refreshState();
         }
@@ -423,24 +419,16 @@ PeopleAccessory.prototype.setNewState = function(newState) {
             this.platform.peopleIntrudorAccessory.refreshState();
         }
 
-        var lastSuccessfulPingMoment = "none";
-        var lastWebhookMoment = "none";
-        lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
-        if(lastSuccessfulPing) {
-            lastSuccessfulPingMoment = moment(lastSuccessfulPing).format();
-        }
-        var lastWebhook = this.platform.storage.getItemSync('lastWebhook_' + this.target);
-        if(lastWebhook) {
-            lastWebhookMoment = moment(lastWebhook).format();
-        }
-
         this.historyService.addEntry(
             {
                 time: moment().unix(),
                 status: (newState) ? 1 : 0
             });
-        this.log('Changed occupancy state for %s to %s. Last successful ping %s , last webhook %s .', this.target, newState, lastSuccessfulPingMoment, lastWebhookMoment);
+        this.log('Changed occupancy state for %s to %s. Last successful ping %s , last doorOpen %s .', this.target, newState, lastSuccessfulPing, lastDoorActivation);
     }
+    
+    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+    this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 }
 
 PeopleAccessory.prototype.getServices = function() {
