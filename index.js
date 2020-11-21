@@ -748,7 +748,7 @@ function ContactSensorAccessory(log, config, platform) {
     }
 
     this.closedDuration = 0;
-    var closedDuration = this.platform.storage.getItemSync('closedDuration_' + this.name);
+    var closedDuration = this.platform.storage.getItemSync('closeDuration_' + this.name);
     if (closedDuration) {
         this.log('Loaded closedDuration value of %s from storage',closedDuration);
         this.closedDuration = closedDuration;
