@@ -255,8 +255,8 @@ function PeopleAccessory(log, config, platform) {
     this.service
         .getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
-    
-    
+
+
     this.motionService = new Service.MotionSensor(this.name);
     this.motionService
         .getCharacteristic(Characteristic.MotionDetected)
@@ -390,12 +390,12 @@ PeopleAccessory.prototype.successfulPingOccurredAfterWebhook = function() {
 PeopleAccessory.prototype.setNewState = function(newState) {
     var oldState = this.stateCache;
     if (oldState != newState) {
-        
+
         var lastDoorActivation = this.platform.storage.getItemSync('lastDoorChange_' + this.platform.doorSensor.name);
         var lastSuccessfulPing = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target)/1000;
 
         if (!newState) {
-          
+
           if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
             if (this.setDisableIgnoreBefore) {
               this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
@@ -410,7 +410,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         this.setDisableIgnoreBefore = false;
 
         this.stateCache = newState;
-        
+
         if(this.platform.peopleAnyOneAccessory) {
             this.platform.peopleAnyOneAccessory.refreshState();
         }
@@ -426,7 +426,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
             });
         this.log('Changed occupancy state for %s to %s. Last successful ping %s , last doorOpen %s .', this.target, newState, lastSuccessfulPing, lastDoorActivation);
     }
-    
+
     this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 }
@@ -736,7 +736,7 @@ function ContactSensorAccessory(log, config, platform) {
     }
 
     this.closedDuration = 0;
-    var closedDuration = this.platform.storage.getItemSync('closeDuration_' + this.name);
+    var closedDuration = this.platform.storage.getItemSync('closedDuration_' + this.name);
     if (closedDuration) {
         this.log('Loaded closedDuration value of %s from storage',closedDuration);
         this.closedDuration = closedDuration;
@@ -921,8 +921,8 @@ ContactSensorAccessory.prototype.setEveResetTotal = function (whatever) {
   this.openDuration = 0;
   this.platform.storage.setItemSync('openDuration_' + this.name, this.openDuration);
 
-  this.closeDuration = 0;
-  this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);
+  this.closedDuration = 0;
+  this.platform.storage.setItemSync('closedDuration_' + this.name, this.closedDuration);
 
   this.lastReset = moment().unix() - this.lastResetReference;
   this.platform.storage.setItemSync('lastReset_' + this.name, this.lastReset);
@@ -1043,8 +1043,8 @@ ContactSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         } else {
-          this.closeDuration += delta;
-          this.platform.storage.setItemSync('closeDuration_' + this.name, this.closeDuration);
+          this.closedDuration += delta;
+          this.platform.storage.setItemSync('closedDuration_' + this.name, this.closedDuration);
 
           this.historyService.addEntry(
             {
