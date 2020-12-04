@@ -48,6 +48,7 @@ function PeoplePlatform(log, config){
     this.doorSensor = [];
     this.motionSensor = [];
     this.entryMoment = 0;
+    this.debug = config["debug"] || false;
 }
 
 PeoplePlatform.prototype = {
@@ -573,8 +574,14 @@ PeopleAllAccessory.prototype.identify = function(callback) {
 
 PeopleAllAccessory.prototype.getLastActivation = function(callback) {
     var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.name);
+    if this.platform.debug {
+        this.log('%s : LastSuccessfulPing from storage is %s',this.name,lastSeenUnix);
+    }
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
+        if this.platform.debug {
+            this.log('%s : LastSeenMoment is %s, historyServiceInitialTime is %s',this.name,lastSeenMoment,this.historyService.getInitialTime());
+        }
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
     }
 }
@@ -1237,7 +1244,13 @@ MotionSensorAccessory.prototype.setSensitivity = function(value) {
 
 MotionSensorAccessory.prototype.getLastActivation = function(callback) {
     var lastSeenMoment = this.platform.storage.getItemSync('lastMotion_' + this.name);
+    if this.platform.debug {
+        this.log('%s : lastSeenMoment from storage is %s',this.name,lastSeenMoment);
+    }
     if (lastSeenMoment) {
+        if this.platform.debug {
+            this.log('%s : historyServiceInitialTime is %s, diff is %s',this.name,this.historyService.getInitialTime(),lastSeenMoment - this.historyService.getInitialTime());
+        }
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
     }
 }
