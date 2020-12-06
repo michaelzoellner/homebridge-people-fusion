@@ -397,9 +397,9 @@ PeopleAccessory.prototype.setNewState = function(newState) {
 
         if (!newState) {
 
-          if (lastSuccessfulPing > (lastDoorActivation + this.platform.wifiLeaveThreshold)) {
-            if (this.setDisableIgnoreBefore) {
-              this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
+          if ((lastSuccessfulPing > (lastDoorActivation + this.wifiLeaveThreshold)) || (moment().unix() < (lastDoorActivation + this.wifiLeaveThreshold))) {
+            if (this.setDisableIgnoreBefore && !this.platform.debug) {
+              this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s or lastDoorOpen was less then threshold ago', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
             } else {
               this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, lastSuccessfulPing, lastDoorActivation, this.platform.wifiLeaveThreshold);
               this.setDisableIgnoreBefore = true;
