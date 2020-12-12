@@ -497,6 +497,7 @@ function PeopleAllAccessory(log, name, platform) {
     this.name = name;
     this.platform = platform;
     this.state = false;
+    this.intrudorResetState = false;
 
     this.lastIntrudorReset = 0;
     var lastIntrudorReset = this.platform.storage.getItemSync('lastIntrudorReset');
@@ -618,14 +619,13 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   this.platform.storage.setItemSync('lastIntrudorReset', moment().unix());
   this.lastIntrudorReset = moment().unix();
   this.refreshState();
-  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.getIntrudorReset());
+  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.intrudorResetState);
   callback(null);
 }
 
 PeopleAllAccessory.prototype.getIntrudorReset = function(callback) {
   this.log('Intrudor reset get triggered')
-  const state = false;
-  callback(null, state);
+  callback(null, this.intrudorResetState);
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
