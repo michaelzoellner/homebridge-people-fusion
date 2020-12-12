@@ -563,7 +563,7 @@ function PeopleAllAccessory(log, name, platform) {
 
     if (this.name === SENSOR_INTRUDOR) {
       this.log('Intrudor reset added.')
-      this.intrudorResetService = this.addService(Service.Switch);
+      this.intrudorResetService =  new Service.Switch(INTRUDOR_RESET);
       this.intrudorResetService
           .getCharacteristic(Characteristic.On)
           .on('get', this.getIntrudorReset.bind(this));
