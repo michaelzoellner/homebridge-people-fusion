@@ -594,7 +594,7 @@ function PeopleAllAccessory(log, name, platform) {
             disableTimer: false
         });
 
-    if (this.name === INTRUDOR_RESET) {
+    if (this.name === SENSOR_INTRUDOR) {
         this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
         this.intrudorResetService
             .getCharacteristic(Characteristic.On)
