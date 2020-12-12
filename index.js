@@ -562,7 +562,7 @@ function PeopleAllAccessory(log, name, platform) {
         });
 
     this.intrudorResetService = new Service.StatelessProgrammableSwitch;
-    this.intrudorResetService.
+    this.intrudorResetService
         .setCharacteristic(Characteristic.ProgrammableSwitchEvent, this.resetIntrudor.bind(this))
         .setCharacteristic(Characteristic.Name, INTRUDOR_RESET);
 
