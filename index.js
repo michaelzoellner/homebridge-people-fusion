@@ -605,9 +605,7 @@ function PeopleAllAccessory(log, name, platform) {
         this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
         this.intrudorResetService
             .getCharacteristic(Characteristic.On)
-            .on('get', this.getIntrudorReset.bind(this));
-        this.intrudorResetService
-            .getCharacteristic(Characteristic.On)
+            .on('get', this.getIntrudorReset.bind(this))
             .on('set', this.resetIntrudor.bind(this));
         this.log('Intrudor reset added.')
     }
