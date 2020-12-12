@@ -765,9 +765,10 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
 PeopleAllAccessory.prototype.refreshState = function() {
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
-    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
-    this.motionService.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
     this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
+    if (this.name === SENSOR_INTRUDOR) {
+      this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.intrudorResetState);
+    }
 }
 
 PeopleAllAccessory.prototype.getServices = function() {
