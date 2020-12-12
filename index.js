@@ -40,6 +40,7 @@ function PeoplePlatform(log, config){
     this.wifiLeaveThreshold = config["wifiLeaveThreshold"] || 120;
     this.grantWifiJoin = config["grantWifiJoin"] || 30;
     this.motionAfterDoorCloseIgnore = config["motionAfterDoorCloseIgnore"] || 5;
+    this.intrudorDisappearTime = config["intrudorDisappearTime"] || 3600;
     this.people = config['people'];
     this.sensors = config['sensors'];
     this.storage = require('node-persist');
@@ -600,6 +601,7 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
             }
           );
           this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
+          setTimeout(PeopleAllAccessory.refreshState.bind(this), this.platform.wifiLeaveThreshold * 1000);
         } else {
           this.historyService.addEntry(
             {
@@ -659,9 +661,14 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     }
 
     if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
-      this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
-      this.platform.entryMoment = lastDoorActivation;
-      return true;
+      if (moment().unix() > (lastMotionDetected + this.platform.intrudorDisappearTime)) {
+        this.platform.entryMoment = 0;
+        this.log('Setting entryMoment to 0 because last MotionDetected was more than intrudorDisappearTime ago');
+      } else {
+        this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
+        this.platform.entryMoment = lastDoorActivation;
+        return true;
+      }
     }
 
     if ((moment().unix() - lastDoorActivation) < this.platform.grantWifiJoin) {
