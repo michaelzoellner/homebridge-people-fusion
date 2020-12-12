@@ -613,11 +613,11 @@ function PeopleAllAccessory(log, name, platform) {
     }
 }
 
-PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
+PeopleAllAccessory.prototype.resetIntrudor = function() {
   this.log('Intrudor reset triggered')
   this.platform.storage.setItemSync('lastIntrudorReset', moment().unix());
   this.lastIntrudorReset = moment().unix();
-  callback(null,this.refreshState());
+  this.refreshState();
 }
 
 PeopleAllAccessory.prototype.getIntrudorReset = function() {
