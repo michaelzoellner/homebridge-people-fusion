@@ -434,8 +434,6 @@ PeopleAccessory.prototype.setNewState = function(newState) {
     }
 
         this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
-        this.motionService.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
-        this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
         this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 }
 
@@ -622,7 +620,6 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   if(this.platform.peopleAnyOneAccessory) {
       this.platform.peopleAnyOneAccessory.refreshState();
   }
-  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.intrudorResetState);
   callback(null);
 }
 
