@@ -675,7 +675,6 @@ PeopleAllAccessory.prototype.getStateFromCache = function() {
             }
           );
           this.platform.storage.setItemSync('lastSuccessfulPing_' + this.name, Date.now());
-          setTimeout(PeopleAllAccessory.refreshState.bind(this), this.platform.wifiLeaveThreshold * 1000);
         } else {
           this.historyService.addEntry(
             {
