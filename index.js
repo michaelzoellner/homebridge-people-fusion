@@ -496,6 +496,13 @@ function PeopleAllAccessory(log, name, platform) {
     this.platform = platform;
     this.state = false;
 
+    this.lastIntrudorReset = 0;
+    var lastIntrudorReset = this.platform.storage.getItemSync('lastIntrudorReset');
+    if (lastIntrudorReset) {
+        this.log('Loaded lastIntrudorReset value of %s from storage',lastIntrudorReset);
+        this.lastIntrudorReset = lastIntrudorReset;
+    }
+
     class LastActivationCharacteristic extends Characteristic {
         constructor(accessory) {
             super('LastActivation', 'E863F11A-079E-48FF-8F27-9C2605A29F52');
@@ -606,9 +613,11 @@ function PeopleAllAccessory(log, name, platform) {
     }
 }
 
-PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
+PeopleAllAccessory.prototype.resetIntrudor = function() {
   this.log('Intrudor reset triggered')
-  callback(null);
+  this.platform.storage.setItemSync('lastIntrudorReset', moment().unix());
+  this.lastIntrudorReset = moment().unix();
+  callback(null,this.refreshState());
 }
 
 PeopleAllAccessory.prototype.getIntrudorReset = function() {
@@ -707,6 +716,8 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
     this.log.debug('... lastDoorActivation is %s', lastDoorActivation);
     var lastMotionDetected = this.platform.storage.getItemSync('lastMotion_' + this.platform.motionSensor.name);
     this.log.debug('... lastMotionDetected is %s', lastMotionDetected);
+    var lastIntrudorReset = this.platform.storage.getItemSync('lastIntrudorReset');
+    this.log.debug('... lastIntrudorReset is %s', lastIntrudorReset);
 
     this.log.debug('... this.platform.motionAfterDoorCloseIgnore is %s seconds', this.platform.motionAfterDoorCloseIgnore);
     this.log.debug('... lastDoorActivation was %s seconds ago', moment().unix() - lastDoorActivation);
@@ -722,14 +733,18 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
         }
     }
 
-    if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
-      if (moment().unix() > (lastMotionDetected + this.platform.intrudorDisappearTime)) {
-        this.platform.entryMoment = 0;
-        this.log('Setting entryMoment to 0 because last MotionDetected was more than intrudorDisappearTime ago');
-      } else {
-        this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
-        this.platform.entryMoment = lastDoorActivation;
-        return true;
+    if (lastIntrudorReset > lastMotionDetected) {
+      this.log('lastIntrudorReset %s was after lastMotionDetected %s',lastIntrudorReset,lastMotionDetected);
+    } else {
+      if (lastMotionDetected > (lastDoorActivation + this.platform.motionAfterDoorCloseIgnore)) {
+        if (moment().unix() > (lastMotionDetected + this.platform.intrudorDisappearTime)) {
+          this.platform.entryMoment = 0;
+          this.log('Setting entryMoment to 0 because last MotionDetected was more than intrudorDisappearTime ago');
+        } else {
+          this.log.debug('... returning true because lastMotionDetected after lastDoorActivation + threshold');
+          this.platform.entryMoment = lastDoorActivation;
+          return true;
+        }
       }
     }
 
