@@ -623,9 +623,8 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   callback(null);
 }
 
-PeopleAllAccessory.prototype.updateIntrudorReset = function(callback) {
+PeopleAllAccessory.prototype.updateIntrudorReset = function() {
   this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.intrudorResetState);
-  callback(null);
 }
 
 PeopleAllAccessory.prototype.getIntrudorReset = function(callback) {
