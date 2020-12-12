@@ -620,6 +620,9 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   if(this.platform.peopleAnyOneAccessory) {
       this.platform.peopleAnyOneAccessory.refreshState();
   }
+  setTimeout(function () {
+    this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(false);
+  }.bind(this), 3000);
   callback(null);
 }
 
