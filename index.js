@@ -561,10 +561,18 @@ function PeopleAllAccessory(log, name, platform) {
             disableTimer: false
         });
 
-    this.intrudorResetService = new Service.StatelessProgrammableSwitch;
-    this.intrudorResetService
-        .setCharacteristic(Characteristic.ProgrammableSwitchEvent, this.resetIntrudor.bind(this))
-        .setCharacteristic(Characteristic.Name, INTRUDOR_RESET);
+    if (this.name === SENSOR_INTRUDOR) {
+      this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
+      this.intrudorResetService.getCharacteristic(Characteristic.On)
+      .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
+        this.log("Current state of the switch was returned: " false);
+        callback(undefined, false);
+      })
+      .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
+        this.log("Switch state was set to: " + value);
+        callback();
+      });
+    }
 
 }
 
