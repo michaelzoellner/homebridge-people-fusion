@@ -616,8 +616,8 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   this.platform.storage.setItemSync('lastIntrudorReset', moment().unix());
   this.lastIntrudorReset = moment().unix();
   this.refreshState();
-  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(false);
-  callback(null);
+  const state = false;
+  callback(null, state);
 }
 
 PeopleAllAccessory.prototype.getIntrudorReset = function(callback) {
