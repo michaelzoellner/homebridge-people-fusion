@@ -563,13 +563,21 @@ function PeopleAllAccessory(log, name, platform) {
 
     if (this.name === SENSOR_INTRUDOR) {
       this.log('Intrudor reset added.')
-      this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
-      this.intrudorResetService
+      this.service.addCharacteristic(Characteristic.On);
+      this.service
           .getCharacteristic(Characteristic.On)
           .on('get', this.getIntrudorReset.bind(this));
-      this.intrudorResetService
+      this.service
           .getCharacteristic(Characteristic.On)
           .on('set', this.resetIntrudor.bind(this));
+            // this.log('Intrudor reset added.')
+            // this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
+            // this.intrudorResetService
+            //     .getCharacteristic(Characteristic.On)
+            //     .on('get', this.getIntrudorReset.bind(this));
+            // this.intrudorResetService
+            //     .getCharacteristic(Characteristic.On)
+            //     .on('set', this.resetIntrudor.bind(this));
     }
 
 }
