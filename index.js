@@ -433,8 +433,10 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         this.log('Changed occupancy state for %s to %s. Last successful ping %s , last doorOpen %s .', this.target, newState, lastSuccessfulPing, lastDoorActivation);
     }
 
-    this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
-    this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
+        this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+        this.motionService.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
+        this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+        this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 }
 
 PeopleAccessory.prototype.getServices = function() {
@@ -616,7 +618,7 @@ PeopleAllAccessory.prototype.resetIntrudor = function(value, callback) {
   this.platform.storage.setItemSync('lastIntrudorReset', moment().unix());
   this.lastIntrudorReset = moment().unix();
   this.refreshState();
-  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(false);
+  this.intrudorResetService.getCharacteristic(Characteristic.On).updateValue(this.getIntrudorReset());
   callback(null);
 }
 
@@ -761,6 +763,8 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
 PeopleAllAccessory.prototype.refreshState = function() {
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
+    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
+    this.motionService.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
     this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
 }
 
