@@ -614,6 +614,7 @@ PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
 PeopleAllAccessory.prototype.getIntrudorReset = function() {
   this.log('Intrudor reset get triggered')
   return false;
+}
 
 PeopleAllAccessory.prototype.getState = function(callback) {
   this.log.debug('getState triggered for %s', this.name);
