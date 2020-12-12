@@ -433,7 +433,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         this.log('Changed occupancy state for %s to %s. Last successful ping %s , last doorOpen %s .', this.target, newState, lastSuccessfulPing, lastDoorActivation);
     }
 
-    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
+    this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(newState));
 }
 
@@ -758,7 +758,7 @@ PeopleAllAccessory.prototype.getAnyoneStateFromCache = function() {
 
 PeopleAllAccessory.prototype.refreshState = function() {
     this.service.getCharacteristic(Characteristic.OccupancyDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
-    this.service.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
+    this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(this.getStateFromCache()));
 }
 
 PeopleAllAccessory.prototype.getServices = function() {
