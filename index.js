@@ -563,15 +563,12 @@ function PeopleAllAccessory(log, name, platform) {
 
     if (this.name === SENSOR_INTRUDOR) {
       this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
-      this.intrudorResetService.getCharacteristic(Characteristic.On)
-      .on(CharacteristicEventTypes.GET, (callback: CharacteristicGetCallback) => {
-        this.log("Current state of the switch was returned: " false);
-        callback(undefined, false);
-      })
-      .on(CharacteristicEventTypes.SET, (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-        this.log("Switch state was set to: " + value);
-        callback();
-      });
+      this.intrudorResetService
+          .getCharacteristic(Characteristic.On)
+          .on('get', this.getIntrudorReset.bind(this));
+      this.intrudorResetService
+          .getCharacteristic(Characteristic.On)
+          .on('set', this.resetIntrudor.bind(this));
     }
 
 }
@@ -579,6 +576,11 @@ function PeopleAllAccessory(log, name, platform) {
 PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
   this.log('Intrudor reset triggered')
   callback(null);
+}
+
+PeopleAllAccessory.prototype.getIntrudorReset = function(callback) {
+  this.log('Intrudor reset get triggered')
+  callback(null, false);
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
