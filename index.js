@@ -71,8 +71,8 @@ PeoplePlatform.prototype = {
             this.peopleIntrudorAccessory = new PeopleAllAccessory(this.log, SENSOR_INTRUDOR, this);
             this.accessories.push(this.peopleIntrudorAccessory);
 
-            this.intrudorResetAccessory = new IntrudorResetAccessory(this.log, INTRUDOR_RESET, this);
-            this.accessories.push(this.intrudorResetAccessory);
+            // this.intrudorResetAccessory = new IntrudorResetAccessory(this.log, INTRUDOR_RESET, this);
+            // this.accessories.push(this.intrudorResetAccessory);
         }
         for(var i = 0; i < this.sensors.length; i++){
           switch (this.sensors[i]['type']) {
@@ -460,31 +460,31 @@ PeopleAccessory.prototype.getServices = function() {
 // IntrudorResetAccessory
 // #######################
 
-function IntrudorResetAccessory(log, name, platform) {
-    this.log = log;
-    this.name = name;
-    this.platform = platform;
-
-    this.log('Intrudor reset added.')
-    this.service =  new Service.Switch(INTRUDOR_RESET);
-    this.service
-        .getCharacteristic(Characteristic.On)
-        .on('get', this.getIntrudorReset.bind(this));
-    this.service
-        .getCharacteristic(Characteristic.On)
-        .on('set', this.resetIntrudor.bind(this));
-
-}
-
-IntrudorResetAccessory.prototype.resetIntrudor = function(callback) {
-  this.log('Intrudor reset triggered')
-  callback(null);
-}
-
-IntrudorResetAccessory.prototype.getIntrudorReset = function() {
-  this.log('Intrudor reset get triggered')
-  return false;
-}
+// function IntrudorResetAccessory(log, name, platform) {
+//     this.log = log;
+//     this.name = name;
+//     this.platform = platform;
+//
+//     this.log('Intrudor reset added.')
+//     this.service =  new Service.Switch(INTRUDOR_RESET);
+//     this.service
+//         .getCharacteristic(Characteristic.On)
+//         .on('get', this.getIntrudorReset.bind(this));
+//     this.service
+//         .getCharacteristic(Characteristic.On)
+//         .on('set', this.resetIntrudor.bind(this));
+//
+// }
+//
+// IntrudorResetAccessory.prototype.resetIntrudor = function(callback) {
+//   this.log('Intrudor reset triggered')
+//   callback(null);
+// }
+//
+// IntrudorResetAccessory.prototype.getIntrudorReset = function() {
+//   this.log('Intrudor reset get triggered')
+//   return false;
+// }
 
 // #######################
 // PeopleAllAccessory
@@ -594,7 +594,26 @@ function PeopleAllAccessory(log, name, platform) {
             disableTimer: false
         });
 
+    if (this.name === INTRUDOR_RESET) {
+        this.intrudorResetService = new Service.Switch(INTRUDOR_RESET);
+        this.intrudorResetService
+            .getCharacteristic(Characteristic.On)
+            .on('get', this.getIntrudorReset.bind(this));
+        this.intrudorResetService
+            .getCharacteristic(Characteristic.On)
+            .on('set', this.resetIntrudor.bind(this));
+        this.log('Intrudor reset added.')
+    }
 }
+
+PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
+  this.log('Intrudor reset triggered')
+  callback(null);
+}
+
+PeopleAllAccessory.prototype.getIntrudorReset = function() {
+  this.log('Intrudor reset get triggered')
+  return false;
 
 PeopleAllAccessory.prototype.getState = function(callback) {
   this.log.debug('getState triggered for %s', this.name);
@@ -741,6 +760,9 @@ PeopleAllAccessory.prototype.getServices = function() {
     }
     if(this.accessoryService) {
         servicesList.push(this.accessoryService)
+    }
+    if(this.intrudorResetService) {
+        servicesList.push(this.intrudorResetService)
     }
 
     return servicesList;
