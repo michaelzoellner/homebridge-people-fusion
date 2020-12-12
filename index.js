@@ -7,6 +7,7 @@ var gpio = require('rpi-gpio');
 var DEFAULT_REQUEST_TIMEOUT = 10000;
 var SENSOR_ANYONE = 'Anyone';
 var SENSOR_INTRUDOR = 'Intrudor';
+var INTRUDOR_RESET = 'Intrudor Reset';
 var FakeGatoHistoryService;
 const EPOCH_OFFSET = 978307200;
 
@@ -559,6 +560,17 @@ function PeopleAllAccessory(log, name, platform) {
             storage: 'fs',
             disableTimer: false
         });
+
+    this.intrudorResetService = new Service.StatelessProgrammableSwitch;
+    this.intrudorResetService.
+        .setCharacteristic(Characteristic.ProgrammableSwitchEvent, this.resetIntrudor.bind(this))
+        .setCharacteristic(Characteristic.Name, INTRUDOR_RESET);
+
+}
+
+PeopleAllAccessory.prototype.resetIntrudor = function(callback) {
+  this.log('Intrudor reset triggered')
+  callback(null);
 }
 
 PeopleAllAccessory.prototype.getState = function(callback) {
