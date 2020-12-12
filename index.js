@@ -474,15 +474,17 @@ function IntrudorResetAccessory(log, name, platform) {
         .getCharacteristic(Characteristic.On)
         .on('set', this.resetIntrudor.bind(this));
 
-    IntrudorResetAccessory.prototype.resetIntrudor = function(callback) {
-      this.log('Intrudor reset triggered')
-      callback(null);
-    }
+}
 
-    IntrudorResetAccessory.prototype.getIntrudorReset = function() {
-      this.log('Intrudor reset get triggered')
-      return false;
-    }
+IntrudorResetAccessory.prototype.resetIntrudor = function(callback) {
+  this.log('Intrudor reset triggered')
+  callback(null);
+}
+
+IntrudorResetAccessory.prototype.getIntrudorReset = function() {
+  this.log('Intrudor reset get triggered')
+  return false;
+}
 
 // #######################
 // PeopleAllAccessory
