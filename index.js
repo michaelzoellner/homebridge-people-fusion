@@ -430,7 +430,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
                 time: moment().unix(),
                 status: (newState) ? 1 : 0
             });
-        this.log('Changed occupancy state for %s to %s. Last successful ping %s , last doorOpen %s .', this.target, newState, lastSuccessfulPing, lastDoorActivation);
+        this.log('Occupancy for %s turned %s. Last successful ping %s , last doorOpen %s .', this.name, newState, lastSuccessfulPing, lastDoorActivation);
     }
 
         this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
@@ -1458,8 +1458,8 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
             }
           );
         }
-
-        this.log('Changed motion sensor state for %s to %s.', this.name, newState);
+        var t = moment().unix() / 1000;
+        this.log('Motion for %s turned %s on %s, %s.', this.name, newState, t, moment(t).format());
 
         if(this.platform.peopleAnyOneAccessory) {
             this.platform.peopleAnyOneAccessory.refreshState();
