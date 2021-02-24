@@ -1459,7 +1459,7 @@ MotionSensorAccessory.prototype.setNewState = function(newState) {
           );
         }
 
-        this.log('Motion for %s turned %s.', this.name, newState);
+        this.log.debug('Motion for %s turned %s.', this.name, newState);
 
         if(this.platform.peopleAnyOneAccessory) {
             this.platform.peopleAnyOneAccessory.refreshState();
