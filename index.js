@@ -412,8 +412,8 @@ PeopleAccessory.prototype.setNewState = function(newState) {
             //this.log('is denied because lastPing was later than lastDoorOpen + threshold');
             return(null);
           }
+          this.setDisableIgnoreBefore = false;
         }
-        this.setDisableIgnoreBefore = false;
 
         this.stateCache = newState;
 
