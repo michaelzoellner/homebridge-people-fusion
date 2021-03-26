@@ -326,6 +326,9 @@ PeopleAccessory.prototype.getLastActivation = function(callback) {
     if (lastSeenUnix) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
+    } else {
+        this.log.debug('No lastSuccessfulPing_ received from storage for %s, returning 0.',this.target);
+        callback(null, 0);
     }
 }
 
