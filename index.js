@@ -285,7 +285,7 @@ function PeopleAccessory(log, config, platform) {
     this.motionService
         .getCharacteristic(DurationCharacteristic)
         .on('get', function(callback){
-            callback(null, 5);
+             callback(null, 5);
         }.bind(this));
 
     this.accessoryService = new Service.AccessoryInformation;
@@ -323,7 +323,8 @@ PeopleAccessory.prototype.getState = function(callback) {
 
 PeopleAccessory.prototype.getLastActivation = function(callback) {
     var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
-    if (lastSeenUnix) {
+    this.log('lastSeenUnix = %s',lastSeenUnix);
+    if (lastSeenUnix && !isNaN(lastSeenUnix)) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
         callback(null, lastSeenMoment - this.historyService.getInitialTime());
     } else {
