@@ -323,10 +323,16 @@ PeopleAccessory.prototype.getState = function(callback) {
 
 PeopleAccessory.prototype.getLastActivation = function(callback) {
     var lastSeenUnix = this.platform.storage.getItemSync('lastSuccessfulPing_' + this.target);
-    this.log('lastSeenUnix = %s',lastSeenUnix);
     if (lastSeenUnix && !isNaN(lastSeenUnix)) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
-        callback(null, lastSeenMoment - this.historyService.getInitialTime());
+        var initialTime = this.historyService.getInitialTime();
+        this.log('lastSeenMoment = %s',lastSeenMoment);
+        this.log('initialTime = %s',initialTime);
+        if (isNaN(lastSeenMoment - initialTime)) {
+            callback(null, 0);
+        } else {
+            callback(null, lastSeenMoment - initialTime);
+        }
     } else {
         this.log.debug('No lastSuccessfulPing_ received from storage for %s, returning 0.',this.target);
         callback(null, 0);
