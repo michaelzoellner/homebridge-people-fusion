@@ -416,10 +416,13 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         if (!newState) {
 
           if ((lastSuccessfulPing > (lastDoorActivation + this.wifiLeaveThreshold)) || (moment().unix() < (lastDoorActivation + this.wifiLeaveThreshold))) {
-            if (this.setDisableIgnoreBefore && !this.platform.debug) {
-              this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s or lastDoorOpen was less then threshold ago', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format(), this.platform.wifiLeaveThreshold);
+            if (this.setDisableIgnoreBefore) {
+                if (this.platform.debug) {
+                    this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format(), this.platform.wifiLeaveThreshold);
+                } else {
+                    this.log.debug('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s or lastDoorOpen was less then threshold ago', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format(), this.platform.wifiLeaveThreshold);
+                }
             } else {
-              this.log('Change of occupancy state for %s to %s ignored, because last successful ping %s was later than lastDoorOpen %s plus threshold %s', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format(), this.platform.wifiLeaveThreshold);
               this.setDisableIgnoreBefore = true;
             }
             //this.log('is denied because lastPing was later than lastDoorOpen + threshold');
@@ -443,7 +446,11 @@ PeopleAccessory.prototype.setNewState = function(newState) {
                 time: moment().unix(),
                 status: (newState) ? 1 : 0
             });
-        this.log('Occupancy for %s turned %s. Last successful ping %s , last doorOpen %s .', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format());
+        if (this.platform.debug) {
+            this.log('Occupancy for %s turned %s. Last successful ping %s , last doorOpen %s .', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format());
+        } else {
+            this.log('Occupancy for %s turned %s.);
+        }
     }
 
         this.motionService.getCharacteristic(Characteristic.MotionDetected).updateValue(PeopleAccessory.encodeState(newState));
