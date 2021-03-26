@@ -449,7 +449,7 @@ PeopleAccessory.prototype.setNewState = function(newState) {
         if (this.platform.debug) {
             this.log('Occupancy for %s turned %s. Last successful ping %s , last doorOpen %s .', this.name, newState, moment(lastSuccessfulPing*1000).format(), moment(lastDoorActivation*1000).format());
         } else {
-            this.log('Occupancy for %s turned %s.);
+            this.log('Occupancy for %s turned %s.',this.name, newState);
         }
     }
 
