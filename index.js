@@ -327,7 +327,7 @@ PeopleAccessory.prototype.getLastActivation = function(callback) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
         var initialTime = this.historyService.getInitialTime();
         if (this.platform.debug) {
-            this.log('Data for lastActivation of %s, this.target);
+            this.log('Data for lastActivation of %s', this.target);
             this.log('lastSeenMoment = %s',lastSeenMoment);
             this.log('initialTime = %s',initialTime);
         }
