@@ -326,8 +326,11 @@ PeopleAccessory.prototype.getLastActivation = function(callback) {
     if (lastSeenUnix && !isNaN(lastSeenUnix)) {
         var lastSeenMoment = moment(lastSeenUnix).unix();
         var initialTime = this.historyService.getInitialTime();
-        this.log('lastSeenMoment = %s',lastSeenMoment);
-        this.log('initialTime = %s',initialTime);
+        if (this.platform.debug) {
+            this.log('Data for lastActivation of %s, this.target);
+            this.log('lastSeenMoment = %s',lastSeenMoment);
+            this.log('initialTime = %s',initialTime);
+        }
         if (isNaN(lastSeenMoment - initialTime)) {
             callback(null, 0);
         } else {
